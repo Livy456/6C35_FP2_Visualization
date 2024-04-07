@@ -10,7 +10,7 @@
     let data = [];
     let width = 900, height = 475; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
-    let xScale = d3.scaleLinear();
+    let xScale = d3.scaleBand();
     let rScale = d3.scaleSqrt();
     let xAxis, yAxis;
     let yAxisGridlines;
@@ -23,6 +23,7 @@
     let selectedEvictions;
     let hasSelection;
     let selectedLines;
+    let family_index = 0;
     let languageBreakdown;
     let languageBreakdownArray;
 
@@ -54,41 +55,20 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("Eviction_Corporate_Ownership_Dataset_FP2.csv.csv", row=> ({
+        data = await d3.csv("binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
-            eviction_2023: Number(row.eviction_2023) 
+            eviction_rate: Number(row.eviction_rate)  
         }));
-        
     });
-    // $: commits = d3.groups(data, d => d.commit).map( ([commit, lines]) => {
-    //         let first = lines[0];
-    //         let {author, date, time, timezone, datetime} = first;
-    //         let ret = {
-    //             id: commit,
-    //             url: "https://github.com/Livy456/my-portfolio" + commit,
-    //             author, date, time, timezone, datetime,
-    //             hourFrac: datetime.getHours() + datetime.getMinutes() / 60,
-    //             totalLines: lines.length
-    //         };
+    $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1);
 
-    //         Object.defineProperty(ret, "lines", {
-    //             values: lines,
-    //             configurable: true,
-    //             writable: true,
-    //             enumerable: false
-    //         });
-
-    //         return ret;
-
-    //     });
-
-    // $: commits = d3.sort(commits, d => -d.totalLines);
-
-    // Y scale is median income
-    $: yScale = yScale.domain(d3.extent(data => d.mhi)).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
-    $: xScale = xScale.domain(d3.extent(data => d.eviction_2023)).range( [usableArea.left, usableArea.right] ).nice();
-    $: rScale = rScale.domain(d3.extent(commits, d => d.totalLines)).range([5, 30]);
+    $: yScale = yScale.domain(d3.extent(data, d => d.eviction_rate)).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
+    // $: xScale = xScale.domain(d3.extent(data, d => d.family_bins)).range( [usableArea.left, usableArea.right] ).padding(0.2);
+    $: xScale = xScale.domain(["mixed", "non-family", "family"]).range( [usableArea.left, usableArea.right] ).padding(0.2);
+    // d3.map((d) => d.family_bins)
+    
+    // $: rScale = rScale.domain(d3.extent(commits, d => d.totalLines)).range([5, 30]);
 
     // $: fileLengths = d3.rollups(data, v => d3.max(v, v => v.line), d => d.file);
     // $: avgFileLength = d3.mean(fileLengths, f => f[1]);
@@ -282,14 +262,15 @@
 
 <h2 class="meta">Summary</h2>
 
-<h2 style="margin-top: 3rem">Commits by time of Day</h2>
+<h2 style="margin-top: 3rem">Number of Evictions vs Median Household Income</h2>
     
 <dl id="eviction-tooltip" class="info tooltip" 
     hidden={hoveredIndex === -1}
     bind:this={evictionTooltip}
     style="top:{tooltipPosition.y}px; left:{tooltipPosition.x}px">
     <dt>Eviction Number</dt>
-    <dd> { hoveredEviction.eviction_2023 } </dd>
+    <dd> { format(hoveredEviction.eviction_rate, ".3f") } </dd>
+    <!-- <dd> { hoveredEviction.eviction_rate } </dd> -->
 
     <dt>Median Household Income</dt>
     <dd>{ hoveredEviction.mhi }</dd>
@@ -304,8 +285,9 @@
     {#each data as d, index}
         <circle 
             class:selected={isDataSelected(d)}
-            cx={ xScale(d.eviction_2023) }
-            cy={ yScale(d.mhi) }
+            cx={ xScale(d.family_bins) + xScale.bandwidth() / 2}
+            cy={ yScale(d.eviction_rate) }
+            r='3'
             fill="#B19CD9"
             on:mouseenter= {evt=> dotInteraction(index, evt)}
             on:mouseleave={evt => dotInteraction(index, evt)}
