@@ -8,7 +8,7 @@
     } from '@floating-ui/dom';
 
     let data = [];
-    let width = 800, height = 400; // changed the height of the graph from 600 to 450
+    let width = 800, height = 275; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
     let xScaleHousehold = d3.scaleBand();
     let xScaleRace = d3.scaleBand();
@@ -63,13 +63,14 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("static/binned_data.csv", row=> ({
+        data = await d3.csv("binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
             family_bins: String(row.family_bins)
         }));
     });
+
     $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
 
     // family type, race, elderly or not
