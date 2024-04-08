@@ -36,11 +36,8 @@
     let box_plot_stats_household = {mixed: {}, non_family: {}, family: {}}
     let box_plot_stats_race = {black: {}, white: {}, latino: {}, other: {}}
     let box_plot_stats_elderly = {some_elder: {}, no_elder: {}}
-    
     let metric_to_graph = "Household Type";
     
-    // $: metric_to_graph = d3.select(input);
-
     let languageBreakdown;
     let languageBreakdownArray;
     
@@ -66,7 +63,7 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("binned_data.csv", row=> ({
+        data = await d3.csv("static/binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
