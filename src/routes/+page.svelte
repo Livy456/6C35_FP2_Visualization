@@ -1,5 +1,6 @@
 <script>
     import * as d3 from "d3";
+    // import binned_csv from '$static/' ;
     import { onMount } from "svelte";
     import {
         computePosition,
