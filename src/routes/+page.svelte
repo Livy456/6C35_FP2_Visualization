@@ -163,7 +163,7 @@
     function calculate_box_plot(binned_data)
     {   
         let eviction_rate_array = [];
-        // console.log("binned_data", binned_data);
+        console.log("binned_data", binned_data);
 
         for (let d of binned_data)
         {
@@ -173,7 +173,7 @@
             }
             
         }
-        // console.log(eviction_rate_array);
+        console.log(eviction_rate_array);
 
         let quantile1 = d3.quantile(eviction_rate_array, 0.25);
         let quantile2 = d3.quantile(eviction_rate_array, 0.5);
@@ -183,7 +183,7 @@
         let maximum = quantile3 + 1.5*innerQuantileRange;
         let summary_stats = {q1: quantile1, q2: quantile2, q3:quantile3, innerQuantile:innerQuantileRange, min: minimum, max:maximum }
         
-        // console.log(summary_stats);
+        console.log(summary_stats);
 
         return summary_stats
     } 
@@ -384,7 +384,10 @@
     
     <g class="dots">
     <!-- MAKE SURE TO SHIFT ALL X VALUES BY + xScale.bandwidth() / 2 -->
+    {console.log("Before the Graphing!!")}
     {console.log(metric_to_graph)}
+    {console.log("data:", data)}
+    
 
     {#if metric_to_graph === "Household Type"}
         {d3.select(xAxis).call(d3.axisBottom(xScaleHousehold))}
