@@ -47,7 +47,7 @@
     const format = d3.format(".1~%");
         
     // defining axes
-    let margin = {top: 10, right: 10, bottom: 30, left:20};
+    let margin = {top: 10, right: 10, bottom: 30, left:40};
     let usableArea = {
         top: margin.top,
         bottom: height - margin.bottom,
@@ -61,7 +61,7 @@
     $: {
         // d3.select(xAxis).call(d3.axisBottom(xScaleHousehold));
 
-        d3.select(yAxis).call(d3.axisLeft(yScale));
+        // d3.select(yAxis).call(d3.axisLeft(yScale));
         d3.select(yAxisGridlines).call(d3.axisLeft(yScale).tickSize(-usableArea.width));
     }
 
@@ -90,10 +90,6 @@
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
     $: yScale = yScale.domain([0, 0.2]).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
-    // $: {
-    //     let value = d3.selectAll(input).on("click", (event) => d3.select(event.currentTarget));
-    //     console.log(value.text);
-    // }
     
     // Setting X scale
     $: xScaleHousehold = xScaleHousehold.domain(family_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);    
@@ -108,35 +104,43 @@
     $: box_plot_stats_household.non_family = calculate_box_plot(data_non_family);
     $: box_plot_stats_household.mixed = calculate_box_plot(data_mixed);
 
-    $: data_black = data.filter((d) => d.majority_race === "black");
-    $: data_white = data.filter((d) => d.majority_race === "white");
-    $: data_latino = data.filter((d) => d.majority_race === "latino");
-    $: data_other = data.filter((d) => d.majority_race === "other");
+    // Computing box plots for race data
+    $: data_black = data.filter((d) => d.majority_race === "Black");
+    $: data_white = data.filter((d) => d.majority_race === "White");
+    $: data_latino = data.filter((d) => d.majority_race === "Latino");
+    $: data_other = data.filter((d) => d.majority_race === "Other");
     $: box_plot_stats_race.black = calculate_box_plot(data_black);
     $: box_plot_stats_race.white = calculate_box_plot(data_white);
     $: box_plot_stats_race.latino = calculate_box_plot(data_latino);
-    $: box_plot_stats_race.latino = calculate_box_plot(data_other);
+    $: box_plot_stats_race.other = calculate_box_plot(data_other);
 
-    function updateMetric(evt)
-    {
-        let metric = evt.value;
-        console.log("metric", evt);
+    // Computing box plots for elder or no elders
+    $: data_elders = data.filter((d) => d.elder_bins === "some elders");
+    $: data_no_elders = data.filter((d) => d.elder_bins === "no elders");
+    $: box_plot_stats_elderly.some_elder = calculate_box_plot(data_elders);
+    $: box_plot_stats_elderly.no_elder = calculate_box_plot(data_no_elders);
+    
 
-        if (metric === "Household Type")
-        {
-            metric_to_graph = "Household Type";
-        }
+    // function updateMetric(evt)
+    // {
+    //     let metric = evt.value;
+    //     console.log("metric", evt);
 
-        else if (metric === "Race")
-        {
-            metric_to_graph = "Race";
-        }
+    //     if (metric === "Household Type")
+    //     {
+    //         metric_to_graph = "Household Type";
+    //     }
 
-        else if (metric === "Elderly")
-        {
-            metric_to_graph = "Elderly";
-        }
-    }
+    //     else if (metric === "Race")
+    //     {
+    //         metric_to_graph = "Race";
+    //     }
+
+    //     else if (metric === "Elderly")
+    //     {
+    //         metric_to_graph = "Elderly";
+    //     }
+    // }
 
     async function dotInteraction (index, evt){
         let hoveredDot = evt.target;
@@ -162,20 +166,28 @@
     function calculate_box_plot(binned_data)
     {   
         let eviction_rate_array = [];
+        // console.log("binned_data", binned_data);
 
         for (let d of binned_data)
         {
-            eviction_rate_array.push(d.eviction_rate);
+            if (d.eviction_rate)
+            {
+                eviction_rate_array.push(d.eviction_rate);
+            }
+            
         }
+        // console.log(eviction_rate_array);
 
         let quantile1 = d3.quantile(eviction_rate_array, 0.25);
         let quantile2 = d3.quantile(eviction_rate_array, 0.5);
         let quantile3 = d3.quantile(eviction_rate_array, 0.75);
         let innerQuantileRange = quantile3 - quantile1;
-        let minimum = quantile1 - .5*innerQuantileRange; // MIGHT NEED TO RECALCULATE THIS, ORIGINALLY -1.5*innerQuartileRange
+        let minimum = quantile1 - .25*innerQuantileRange; // MIGHT NEED TO RECALCULATE THIS, ORIGINALLY -1.5*innerQuartileRange
         let maximum = quantile3 + 1.5*innerQuantileRange;
         let summary_stats = {q1: quantile1, q2: quantile2, q3:quantile3, innerQuantile:innerQuantileRange, min: minimum, max:maximum }
         
+        // console.log(summary_stats);
+
         return summary_stats
     } 
 
@@ -351,7 +363,7 @@
     hidden={hoveredIndex === -1}
     bind:this={evictionTooltip}
     style="top:{tooltipPosition.y}px; left:{tooltipPosition.x}px">
-    <dt>Eviction Number</dt>
+    <dt>Eviction Rate</dt>
     <dd> { format(hoveredEviction.eviction_rate, ".3f") } </dd>
 
     <dt>Median Household Income</dt>
@@ -438,7 +450,6 @@
             />
             {/if}
 
-            
             {#if bin_type === "mixed"}
             <line 
                 x1={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
@@ -493,6 +504,7 @@
     <!-- GRAPH FOR RACE METRIC -->
     {#if metric_to_graph === "Race"}
         {d3.select(xAxis).call(d3.axisBottom(xScaleRace))}
+        
         {#each race_bins as bin_type}
             
             <!-- box plot for black people -->
@@ -528,6 +540,93 @@
             />
             {/if}
 
+            {#if bin_type === "White"}
+            <line 
+                x1={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.white.min) }
+                y2={ yScale(box_plot_stats_race.white.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.white.q2) }
+                y2={ yScale(box_plot_stats_race.white.q2) }
+                stroke="black"
+                width=80
+            />
+
+            <rect
+                x={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2}
+                y= { yScale(box_plot_stats_race.white.q3)}
+                width={boxWidth}
+                height={yScale(box_plot_stats_race.white.q1) - yScale(box_plot_stats_race.white.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+            {#if bin_type === "Latino"}
+            <line 
+                x1={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.latino.min) }
+                y2={ yScale(box_plot_stats_race.latino.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.latino.q2) }
+                y2={ yScale(box_plot_stats_race.latino.q2) }
+                stroke="black"
+                width=80
+            />
+
+            <rect
+                x={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2}
+                y= { yScale(box_plot_stats_race.latino.q3)}
+                width={boxWidth}
+                height={yScale(box_plot_stats_race.latino.q1) - yScale(box_plot_stats_race.latino.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+            {#if bin_type === "Other"}
+            <line 
+                x1={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.other.min) }
+                y2={ yScale(box_plot_stats_race.other.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.other.q2) }
+                y2={ yScale(box_plot_stats_race.other.q2) }
+                stroke="black"
+                width=80
+            />
+
+            <rect
+                x={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2}
+                y= { yScale(box_plot_stats_race.other.q3)}
+                width={boxWidth}
+                height={yScale(box_plot_stats_race.other.q1) - yScale(box_plot_stats_race.other.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
         {/each}
 
         {#each data as d, index}
@@ -554,102 +653,73 @@
     <!-- PLOT FOR ELDER METRIC -->
     {#if metric_to_graph === "Elderly"}
         {d3.select(xAxis).call(d3.axisBottom(xScaleElder))}
-        {#each race_bins as bin_type}
+        {#each elder_bins as bin_type}
             
             <!-- box plot for black people -->
-            {#if bin_type === "Black"}
+            {#if bin_type === "some elders"}
             <line 
-                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.family.min) }
-                y2={ yScale(box_plot_stats_household.family.max) }
+                x1={ xScaleElder(bin_type) + xScaleElder.bandwidth() / 2 }
+                x2={ xScaleElder(bin_type) + xScaleElder.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_elderly.some_elder.min) }
+                y2={ yScale(box_plot_stats_elderly.some_elder.max) }
                 stroke="black"
                 width=40
             />
             <line
-                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.family.q2) }
-                y2={ yScale(box_plot_stats_household.family.q2) }
+                x1={ xScaleElder(bin_type) - boxWidth/2 + xScaleElder.bandwidth() / 2 }
+                x2={ xScaleElder(bin_type) + boxWidth/2 + xScaleElder.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_elderly.some_elder.q2) }
+                y2={ yScale(box_plot_stats_elderly.some_elder.q2) }
                 stroke="black"
                 width=80
             />
 
             <rect
-                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-                y={yScale(box_plot_stats_household.family.q3)} 
+                x={ xScaleElder(bin_type) - boxWidth/2 + xScaleElder.bandwidth() / 2}
+                y={yScale(box_plot_stats_elderly.some_elder.q3)} 
                 width={boxWidth}
-                height={yScale(box_plot_stats_household.family.q1) - yScale(box_plot_stats_household.family.q3)}
+                height={yScale(box_plot_stats_elderly.some_elder.q1) - yScale(box_plot_stats_elderly.some_elder.q3)}
                 stroke="black"
                 fill="blue"
                 fill-opacity=0.5
             />
             {/if}
 
-            {#if bin_type === "non-family"}
+            {#if bin_type === "no elders"}
             <line 
-                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.non_family.min) }
-                y2={ yScale(box_plot_stats_household.non_family.max) }
+                x1={ xScaleElder(bin_type) + xScaleElder.bandwidth() / 2 }
+                x2={ xScaleElder(bin_type) + xScaleElder.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_elderly.no_elder.min) }
+                y2={ yScale(box_plot_stats_elderly.no_elder.max) }
                 stroke="black"
                 width=40
             />
             <line
-                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.non_family.q2) }
-                y2={ yScale(box_plot_stats_household.non_family.q2) }
+                x1={ xScaleElder(bin_type) - boxWidth/2 + xScaleElder.bandwidth() / 2 }
+                x2={ xScaleElder(bin_type) + boxWidth/2 + xScaleElder.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_elderly.no_elder.q2) }
+                y2={ yScale(box_plot_stats_elderly.no_elder.q2) }
                 stroke="black"
                 width=80
             />
             <rect
-                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-                y={yScale(box_plot_stats_household.non_family.q3)} 
+                x={ xScaleElder(bin_type) - boxWidth/2 + xScaleElder.bandwidth() / 2}
+                y={yScale(box_plot_stats_elderly.no_elder.q3)} 
                 width={boxWidth}
-                height={yScale(box_plot_stats_household.non_family.q1) - yScale(box_plot_stats_household.non_family.q3)}
+                height={yScale(box_plot_stats_elderly.no_elder.q1) - yScale(box_plot_stats_elderly.no_elder.q3)}
                 stroke="black"
                 fill="blue"
                 fill-opacity=0.5
             />
             {/if}
 
-            
-            {#if bin_type === "mixed"}
-            <line 
-                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.mixed.min) }
-                y2={ yScale(box_plot_stats_household.mixed.max) }
-                stroke="black"
-                width=40
-            />
-            <line
-                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-                y1={ yScale(box_plot_stats_household.mixed.q2) }
-                y2={ yScale(box_plot_stats_household.mixed.q2) }
-                stroke="black"
-                width=80
-            />
-            <rect
-                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-                y={yScale(box_plot_stats_household.mixed.q3)} 
-                width={boxWidth}
-                height={yScale(box_plot_stats_household.mixed.q1) - yScale(box_plot_stats_household.mixed.q3)}
-                stroke="black"
-                fill="blue"
-                fill-opacity=0.5
-            />
-            {/if}
-            
         {/each}
 
         {#each data as d, index}
         
             <circle 
                 class:selected={isDataSelected(d)}
-                cx={ xScale(d.family_bins) + xScale.bandwidth() / 3.2 + Math.random()*80}
+                cx={ xScaleElder(d.elder_bins) + xScaleElder.bandwidth() / 3.2 + Math.random()*80}
                 cy={ yScale(d.eviction_rate) }
                 r='3'
                 fill="#B19CD9"
