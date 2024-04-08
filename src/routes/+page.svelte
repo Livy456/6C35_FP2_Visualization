@@ -10,7 +10,9 @@
     let data = [];
     let width = 800, height = 400; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
-    let xScale = d3.scaleBand();
+    let xScaleHousehold = d3.scaleBand();
+    let xScaleRace = d3.scaleBand();
+    let xScaleElder = d3.scaleBand();
     let rScale = d3.scaleSqrt();
     let xAxis, yAxis;
     let yAxisGridlines;
@@ -19,17 +21,25 @@
     let tooltipPosition = {x:0, y:0};
     let evictionTooltip;
     let svg;
+    let input;
     let brushedSelection;
     let selectedEvictions;
     let hasSelection;
     let selectedLines;
     let boxWidth = 100;
     let family_bins = ["mixed", "non-family", "family"];
+    let race_bins = ["White", "Black", "Latino", "Other"];
+    let elder_bins = ["some elders", "no elders"];
     let data_mixed;
     let data_family;
     let data_non_family;
-    let box_plot_stats = {mixed: {}, non_family: {}, family: {}}
-    let metric_to_graph = "Type of Household";
+    let box_plot_stats_household = {mixed: {}, non_family: {}, family: {}}
+    let box_plot_stats_race = {black: {}, white: {}, latino: {}, other: {}}
+    let box_plot_stats_elderly = {some_elder: {}, no_elder: {}}
+    
+    let metric_to_graph = "Household Type";
+    
+    // $: metric_to_graph = d3.select(input);
 
     let languageBreakdown;
     let languageBreakdownArray;
@@ -49,7 +59,8 @@
 
     // creating axes on the page
     $: {
-        d3.select(xAxis).call(d3.axisBottom(xScale));
+        // d3.select(xAxis).call(d3.axisBottom(xScaleHousehold));
+
         d3.select(yAxis).call(d3.axisLeft(yScale));
         d3.select(yAxisGridlines).call(d3.axisLeft(yScale).tickSize(-usableArea.width));
     }
@@ -66,22 +77,66 @@
 
     // family type, race, elderly or not
     // [y_min - (y_min*0.05), y_max + (y_max * 0.05)]
-    $: yScale = yScale.domain([0, 0.2]).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
-    $: xScale = xScale.domain(["mixed", "non-family", "family"]).range( [usableArea.left, usableArea.right] ).padding(0.2);    
+
+    // Changes the metric to Household type
+    
+    
     $: {
         d3.select(svg).call(d3.brush().on("start brush end", brushed));
         d3.select(svg).selectAll(".dots, .overlay ~ *").raise();
     }
-
+    
     $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
+    $: yScale = yScale.domain([0, 0.2]).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
+    // $: {
+    //     let value = d3.selectAll(input).on("click", (event) => d3.select(event.currentTarget));
+    //     console.log(value.text);
+    // }
+    
+    // Setting X scale
+    $: xScaleHousehold = xScaleHousehold.domain(family_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);    
+    $: xScaleRace = xScaleRace.domain(race_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);
+    $: xScaleElder = xScaleElder.domain(elder_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);
+
+    // Computing box plots for family bin data
     $: data_mixed = data.filter((d) => d.family_bins === "mixed");
     $: data_family = data.filter((d) => d.family_bins === "family");
     $: data_non_family = data.filter((d) => d.family_bins === "non-family");
-    $: box_plot_stats.family = calculate_box_plot(data_family);
-    $: box_plot_stats.non_family = calculate_box_plot(data_non_family);
-    $: box_plot_stats.mixed = calculate_box_plot(data_mixed);
+    $: box_plot_stats_household.family = calculate_box_plot(data_family);
+    $: box_plot_stats_household.non_family = calculate_box_plot(data_non_family);
+    $: box_plot_stats_household.mixed = calculate_box_plot(data_mixed);
+
+    $: data_black = data.filter((d) => d.majority_race === "black");
+    $: data_white = data.filter((d) => d.majority_race === "white");
+    $: data_latino = data.filter((d) => d.majority_race === "latino");
+    $: data_other = data.filter((d) => d.majority_race === "other");
+    $: box_plot_stats_race.black = calculate_box_plot(data_black);
+    $: box_plot_stats_race.white = calculate_box_plot(data_white);
+    $: box_plot_stats_race.latino = calculate_box_plot(data_latino);
+    $: box_plot_stats_race.latino = calculate_box_plot(data_other);
+
+    function updateMetric(evt)
+    {
+        let metric = evt.value;
+        console.log("metric", evt);
+
+        if (metric === "Household Type")
+        {
+            metric_to_graph = "Household Type";
+        }
+
+        else if (metric === "Race")
+        {
+            metric_to_graph = "Race";
+        }
+
+        else if (metric === "Elderly")
+        {
+            metric_to_graph = "Elderly";
+        }
+    }
 
     async function dotInteraction (index, evt){
         let hoveredDot = evt.target;
@@ -141,7 +196,7 @@
         let bottom_right = {x: brushedSelection[1][0], y: brushedSelection[1][1]};
 
         // gets coordinate of commit data point
-        let data_x_coord = xScale(dot.family_bins);
+        let data_x_coord = xScaleHousehold(dot.family_bins);
         let data_y_coord = yScale(dot.eviction_rate)
 
         // checks if commit data point is within selected brush region
@@ -283,14 +338,12 @@
 </style>
 
 <h2 class="meta">Summary</h2>
+<!-- on:click={ function() {metric_to_graph= "Race"} } -->
 <div class="metric_selection">
-    <input type="button" value="Race">
-    <input type="button" value="Elderly">
-    <input type="button" value="Household Type">
+    <input type="button" value="Race" on:click={ function() {metric_to_graph= "Race"} }>
+    <input type="button" value="Elderly" on:click={ function() {metric_to_graph= "Elderly"} }>
+    <input type="button" value="Household Type" on:click={ function() {metric_to_graph= "Household Type"} }>
 </div>
-
-
-
 
 <h2 style="margin-top: 3rem">Number of Evictions vs {metric_to_graph}</h2>
     
@@ -322,114 +375,297 @@
     
     <g class="dots">
     <!-- MAKE SURE TO SHIFT ALL X VALUES BY + xScale.bandwidth() / 2 -->
-    {#each family_bins as bin_type}
-        {#if bin_type === "family"}
-        <line 
-            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.family.min) }
-            y2={ yScale(box_plot_stats.family.max) }
-            stroke="black"
-            width=40
-        />
-        <line
-            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.family.q2) }
-            y2={ yScale(box_plot_stats.family.q2) }
-            stroke="black"
-            width=80
-        />
+    {console.log(metric_to_graph)}
 
-        <rect
-            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-            y={yScale(box_plot_stats.family.q3)} 
-            width={boxWidth}
-            height={yScale(box_plot_stats.family.q1) - yScale(box_plot_stats.family.q3)}
-            stroke="black"
-            fill="blue"
-            fill-opacity=0.5
-        />
-        {/if}
+    {#if metric_to_graph === "Household Type"}
+        {d3.select(xAxis).call(d3.axisBottom(xScaleHousehold))}
+        {#each family_bins as bin_type}
+            <!-- {console.log("Hello!!!")} -->
+            {#if bin_type === "family"}
+            <line 
+                x1={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.family.min) }
+                y2={ yScale(box_plot_stats_household.family.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.family.q2) }
+                y2={ yScale(box_plot_stats_household.family.q2) }
+                stroke="black"
+                width=80
+            />
 
-        {#if bin_type === "non-family"}
-        <line 
-            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.non_family.min) }
-            y2={ yScale(box_plot_stats.non_family.max) }
-            stroke="black"
-            width=40
-        />
-        <line
-            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.non_family.q2) }
-            y2={ yScale(box_plot_stats.non_family.q2) }
-            stroke="black"
-            width=80
-        />
-        <rect
-            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-            y={yScale(box_plot_stats.non_family.q3)} 
-            width={boxWidth}
-            height={yScale(box_plot_stats.non_family.q1) - yScale(box_plot_stats.non_family.q3)}
-            stroke="black"
-            fill="blue"
-            fill-opacity=0.5
-        />
-        {/if}
+            <rect
+                x={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2}
+                y={ yScale(box_plot_stats_household.family.q3) } 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.family.q1) - yScale(box_plot_stats_household.family.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
 
+            {#if bin_type === "non-family"}
+            <line 
+                x1={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.non_family.min) }
+                y2={ yScale(box_plot_stats_household.non_family.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.non_family.q2) }
+                y2={ yScale(box_plot_stats_household.non_family.q2) }
+                stroke="black"
+                width=80
+            />
+            <rect
+                x={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2}
+                y={ yScale(box_plot_stats_household.non_family.q3) } 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.non_family.q1) - yScale(box_plot_stats_household.non_family.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+            
+            {#if bin_type === "mixed"}
+            <line 
+                x1={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.mixed.min) }
+                y2={ yScale(box_plot_stats_household.mixed.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                x2={ xScaleHousehold(bin_type) + boxWidth/2 + xScaleHousehold.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.mixed.q2) }
+                y2={ yScale(box_plot_stats_household.mixed.q2) }
+                stroke="black"
+                width=80
+            />
+            <rect
+                x={ xScaleHousehold(bin_type) - boxWidth/2 + xScaleHousehold.bandwidth() / 2}
+                y={ yScale(box_plot_stats_household.mixed.q3) } 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.mixed.q1) - yScale(box_plot_stats_household.mixed.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+            
+        {/each}
+
+        {#each data as d, index}
         
-        {#if bin_type === "mixed"}
-        <line 
-            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.mixed.min) }
-            y2={ yScale(box_plot_stats.mixed.max) }
-            stroke="black"
-            width=40
-        />
-        <line
-            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
-            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
-            y1={ yScale(box_plot_stats.mixed.q2) }
-            y2={ yScale(box_plot_stats.mixed.q2) }
-            stroke="black"
-            width=80
-        />
-        <rect
-            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
-            y={yScale(box_plot_stats.mixed.q3)} 
-            width={boxWidth}
-            height={yScale(box_plot_stats.mixed.q1) - yScale(box_plot_stats.mixed.q3)}
-            stroke="black"
-            fill="blue"
-            fill-opacity=0.5
-        />
-        {/if}
+            <circle 
+                class:selected={isDataSelected(d)}
+                cx={ xScaleHousehold(d.family_bins) + xScaleHousehold.bandwidth() / 3.2 + Math.random()*80}
+                cy={ yScale(d.eviction_rate) }
+                r='3'
+                fill="#B19CD9"
+                on:mouseenter= {evt=> dotInteraction(index, evt)}
+                on:mouseleave={evt => dotInteraction(index, evt)}
+                tabindex="0"
+                aria-describedby="eviction-tooltip"
+                role="tooltip"
+                aria-haspopup="true"
+                on:focus={evt=> dotInteraction(index, evt)}
+                on:blur={evt=> dotInteraction(index, evt)}
+            />
+            
+        {/each}
+    {/if}
+
+    <!-- GRAPH FOR RACE METRIC -->
+    {#if metric_to_graph === "Race"}
+        {d3.select(xAxis).call(d3.axisBottom(xScaleRace))}
+        {#each race_bins as bin_type}
+            
+            <!-- box plot for black people -->
+            {#if bin_type === "Black"}
+            <line 
+                x1={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.black.min) }
+                y2={ yScale(box_plot_stats_race.black.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                x2={ xScaleRace(bin_type) + boxWidth/2 + xScaleRace.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_race.black.q2) }
+                y2={ yScale(box_plot_stats_race.black.q2) }
+                stroke="black"
+                width=80
+            />
+
+            <!-- FIX THE HEIGHT OF THE BOX -->
+            <!-- {yScale(box_plot_stats_race.black.q1) - yScale(box_plot_stats_race.black.q3)} -->
+            <!-- { yScale(box_plot_stats_race.black.q3)} -->
+            <rect
+                x={ xScaleRace(bin_type) - boxWidth/2 + xScaleRace.bandwidth() / 2}
+                y= { yScale(box_plot_stats_race.black.q3)}
+                width={boxWidth}
+                height={yScale(box_plot_stats_race.black.q1) - yScale(box_plot_stats_race.black.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+        {/each}
+
+        {#each data as d, index}
         
-    {/each}
+            <circle 
+                class:selected={isDataSelected(d)}
+                cx={ xScaleRace(d.majority_race) + xScaleRace.bandwidth() / 3.2 + Math.random()*80}
+                cy={ yScale(d.eviction_rate) }
+                r='3'
+                fill="#B19CD9"
+                on:mouseenter= {evt=> dotInteraction(index, evt)}
+                on:mouseleave={evt => dotInteraction(index, evt)}
+                tabindex="0"
+                aria-describedby="eviction-tooltip"
+                role="tooltip"
+                aria-haspopup="true"
+                on:focus={evt=> dotInteraction(index, evt)}
+                on:blur={evt=> dotInteraction(index, evt)}
+            />
+            
+        {/each}
+    {/if}
+
+    <!-- PLOT FOR ELDER METRIC -->
+    {#if metric_to_graph === "Elderly"}
+        {d3.select(xAxis).call(d3.axisBottom(xScaleElder))}
+        {#each race_bins as bin_type}
+            
+            <!-- box plot for black people -->
+            {#if bin_type === "Black"}
+            <line 
+                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.family.min) }
+                y2={ yScale(box_plot_stats_household.family.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.family.q2) }
+                y2={ yScale(box_plot_stats_household.family.q2) }
+                stroke="black"
+                width=80
+            />
+
+            <rect
+                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+                y={yScale(box_plot_stats_household.family.q3)} 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.family.q1) - yScale(box_plot_stats_household.family.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+            {#if bin_type === "non-family"}
+            <line 
+                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.non_family.min) }
+                y2={ yScale(box_plot_stats_household.non_family.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.non_family.q2) }
+                y2={ yScale(box_plot_stats_household.non_family.q2) }
+                stroke="black"
+                width=80
+            />
+            <rect
+                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+                y={yScale(box_plot_stats_household.non_family.q3)} 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.non_family.q1) - yScale(box_plot_stats_household.non_family.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+
+            
+            {#if bin_type === "mixed"}
+            <line 
+                x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.mixed.min) }
+                y2={ yScale(box_plot_stats_household.mixed.max) }
+                stroke="black"
+                width=40
+            />
+            <line
+                x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+                x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+                y1={ yScale(box_plot_stats_household.mixed.q2) }
+                y2={ yScale(box_plot_stats_household.mixed.q2) }
+                stroke="black"
+                width=80
+            />
+            <rect
+                x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+                y={yScale(box_plot_stats_household.mixed.q3)} 
+                width={boxWidth}
+                height={yScale(box_plot_stats_household.mixed.q1) - yScale(box_plot_stats_household.mixed.q3)}
+                stroke="black"
+                fill="blue"
+                fill-opacity=0.5
+            />
+            {/if}
+            
+        {/each}
+
+        {#each data as d, index}
+        
+            <circle 
+                class:selected={isDataSelected(d)}
+                cx={ xScale(d.family_bins) + xScale.bandwidth() / 3.2 + Math.random()*80}
+                cy={ yScale(d.eviction_rate) }
+                r='3'
+                fill="#B19CD9"
+                on:mouseenter= {evt=> dotInteraction(index, evt)}
+                on:mouseleave={evt => dotInteraction(index, evt)}
+                tabindex="0"
+                aria-describedby="eviction-tooltip"
+                role="tooltip"
+                aria-haspopup="true"
+                on:focus={evt=> dotInteraction(index, evt)}
+                on:blur={evt=> dotInteraction(index, evt)}
+            />
+            
+        {/each}
+    {/if}
     
-    {#each data as d, index}
-        
-        <circle 
-            class:selected={isDataSelected(d)}
-            cx={ xScale(d.family_bins) + xScale.bandwidth() / 3.2 + Math.random()*80}
-            cy={ yScale(d.eviction_rate) }
-            r='3'
-            fill="#B19CD9"
-            on:mouseenter= {evt=> dotInteraction(index, evt)}
-            on:mouseleave={evt => dotInteraction(index, evt)}
-            tabindex="0"
-            aria-describedby="eviction-tooltip"
-            role="tooltip"
-            aria-haspopup="true"
-            on:focus={evt=> dotInteraction(index, evt)}
-            on:blur={evt=> dotInteraction(index, evt)}
-        />
-        
-    {/each}
     </g>
 </svg>
 
