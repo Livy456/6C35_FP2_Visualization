@@ -8,7 +8,7 @@
     } from '@floating-ui/dom';
 
     let data = [];
-    let width = 900, height = 475; // changed the height of the graph from 600 to 450
+    let width = 800, height = 400; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
     let xScale = d3.scaleBand();
     let rScale = d3.scaleSqrt();
@@ -23,16 +23,17 @@
     let selectedEvictions;
     let hasSelection;
     let selectedLines;
-    let family_index = 0;
+    let boxWidth = 100;
+    let family_bins = ["mixed", "non-family", "family"];
+    let data_mixed;
+    let data_family;
+    let data_non_family;
+    let box_plot_stats = {mixed: {}, non_family: {}, family: {}}
+    let metric_to_graph = "Type of Household";
+
     let languageBreakdown;
     let languageBreakdownArray;
-
-    // let brushedSelection;
-    $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
-    $: hasSelection = brushedSelection && selectedEvictions.length > 0;
-    $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
-    // $: selectedLines = hasSelection ? data.filter((d) => selectedCommits.map(commit => commit.id).includes(d.commit)) : data;
-
+    
     const format = d3.format(".1~%");
         
     // defining axes
@@ -46,40 +47,41 @@
     usableArea.width = usableArea.right - usableArea.left;
     usableArea.height = usableArea.bottom - usableArea.top;
 
-    // creating axis on page
+    // creating axes on the page
     $: {
         d3.select(xAxis).call(d3.axisBottom(xScale));
         d3.select(yAxis).call(d3.axisLeft(yScale));
-        // d3.select(yAxis).call(d3.axisLeft(yScale).tickFormat(d => String(d % 24).padStart(2, "0") + ":00"));
-        d3.select(yAxisGridlines).call(d3.axisLeft(yScale).tickFormat("").tickSize(-usableArea.width));
+        d3.select(yAxisGridlines).call(d3.axisLeft(yScale).tickSize(-usableArea.width));
     }
 
     onMount(async() => {
         data = await d3.csv("binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
-            eviction_rate: Number(row.eviction_rate)  
+            eviction_rate: Number(row.eviction_rate),
+            family_bins: String(row.family_bins)
         }));
     });
-    $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1);
+    $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
 
-    $: yScale = yScale.domain(d3.extent(data, d => d.eviction_rate)).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
-    // $: xScale = xScale.domain(d3.extent(data, d => d.family_bins)).range( [usableArea.left, usableArea.right] ).padding(0.2);
-    $: xScale = xScale.domain(["mixed", "non-family", "family"]).range( [usableArea.left, usableArea.right] ).padding(0.2);
-    // d3.map((d) => d.family_bins)
-    
-    // $: rScale = rScale.domain(d3.extent(commits, d => d.totalLines)).range([5, 30]);
+    // family type, race, elderly or not
+    // [y_min - (y_min*0.05), y_max + (y_max * 0.05)]
+    $: yScale = yScale.domain([0, 0.2]).range([usableArea.bottom, usableArea.top]); // might need to switch values currently domain = [0, height], range = [0, 24] 
+    $: xScale = xScale.domain(["mixed", "non-family", "family"]).range( [usableArea.left, usableArea.right] ).padding(0.2);    
+    $: {
+        d3.select(svg).call(d3.brush().on("start brush end", brushed));
+        d3.select(svg).selectAll(".dots, .overlay ~ *").raise();
+    }
 
-    // $: fileLengths = d3.rollups(data, v => d3.max(v, v => v.line), d => d.file);
-    // $: avgFileLength = d3.mean(fileLengths, f => f[1]);
-    // $: workByPeriod = d3.rollups(data, v=> v.length, d => d.datetime.toLocaleString("en", {dayPeriod: "short"}) );
-    // $: languageBreakdown = d3.rollups(selectedLines, v=> v.length, d => d.type);    
-    // $: languageBreakdownArray = Array.from(languageBreakdown).map( ([language, lines]) => ({label: language, value:lines}) );
-    // $: maxPeriod = d3.greatest(workByPeriod, (d) => d[1])?.[0];
-    // $: {
-    //     d3.select(svg).call(d3.brush().on("start brush end", brushed));
-    //     d3.select(svg).selectAll(".dots, .overlay ~ *").raise();
-    // }
+    $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
+    $: hasSelection = brushedSelection && selectedEvictions.length > 0;
+    $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
+    $: data_mixed = data.filter((d) => d.family_bins === "mixed");
+    $: data_family = data.filter((d) => d.family_bins === "family");
+    $: data_non_family = data.filter((d) => d.family_bins === "non-family");
+    $: box_plot_stats.family = calculate_box_plot(data_family);
+    $: box_plot_stats.non_family = calculate_box_plot(data_non_family);
+    $: box_plot_stats.mixed = calculate_box_plot(data_mixed);
 
     async function dotInteraction (index, evt){
         let hoveredDot = evt.target;
@@ -102,6 +104,26 @@
         }
     }
 
+    function calculate_box_plot(binned_data)
+    {   
+        let eviction_rate_array = [];
+
+        for (let d of binned_data)
+        {
+            eviction_rate_array.push(d.eviction_rate);
+        }
+
+        let quantile1 = d3.quantile(eviction_rate_array, 0.25);
+        let quantile2 = d3.quantile(eviction_rate_array, 0.5);
+        let quantile3 = d3.quantile(eviction_rate_array, 0.75);
+        let innerQuantileRange = quantile3 - quantile1;
+        let minimum = quantile1 - .5*innerQuantileRange; // MIGHT NEED TO RECALCULATE THIS, ORIGINALLY -1.5*innerQuartileRange
+        let maximum = quantile3 + 1.5*innerQuantileRange;
+        let summary_stats = {q1: quantile1, q2: quantile2, q3:quantile3, innerQuantile:innerQuantileRange, min: minimum, max:maximum }
+        
+        return summary_stats
+    } 
+
     function brushed (evt)
     {
         brushedSelection = evt.selection;
@@ -119,15 +141,18 @@
         let bottom_right = {x: brushedSelection[1][0], y: brushedSelection[1][1]};
 
         // gets coordinate of commit data point
-        let data_x_coord = xScale(dot.eviction_2023);
-        let data_y_coord = yScale(dot.mhi)
+        let data_x_coord = xScale(dot.family_bins);
+        let data_y_coord = yScale(dot.eviction_rate)
 
         // checks if commit data point is within selected brush region
         if(data_x_coord >= top_left.x && data_x_coord <= bottom_right.x && 
         data_y_coord >= top_left.y && data_y_coord <= bottom_right.y)
         {
+            // console.log("I'm a brushed dot!!");
             return true;
         }
+
+        // console.log("I haven't been brushed!!!");
 
         return false;
     }
@@ -153,7 +178,7 @@
     }
 
     svg{
-        margin:50px;
+        margin:5 0px;
     }
 
     dl.info
@@ -166,7 +191,7 @@
         backdrop-filter: blur(10px);
         padding:10px;
 
-        transition-duration: 500ms;
+        /* transition-duration: 50ms; */
         transition-property: opacity, visibility;
 
         &[hidden]:not(:hover, :focus-within){
@@ -229,9 +254,6 @@
             transition: 200ms;
             transform-origin: center;
             transform-box: fill-box;
-            /* fill-opacity: 100%;  */
-            /* HOW DO YOU CHANGE THE OPACITY OF BIGGER DOTS */
-
             &:hover
             {
                 transform: scale(1.5);
@@ -261,8 +283,16 @@
 </style>
 
 <h2 class="meta">Summary</h2>
+<div class="metric_selection">
+    <input type="button" value="Race">
+    <input type="button" value="Elderly">
+    <input type="button" value="Household Type">
+</div>
 
-<h2 style="margin-top: 3rem">Number of Evictions vs Median Household Income</h2>
+
+
+
+<h2 style="margin-top: 3rem">Number of Evictions vs {metric_to_graph}</h2>
     
 <dl id="eviction-tooltip" class="info tooltip" 
     hidden={hoveredIndex === -1}
@@ -270,10 +300,19 @@
     style="top:{tooltipPosition.y}px; left:{tooltipPosition.x}px">
     <dt>Eviction Number</dt>
     <dd> { format(hoveredEviction.eviction_rate, ".3f") } </dd>
-    <!-- <dd> { hoveredEviction.eviction_rate } </dd> -->
 
     <dt>Median Household Income</dt>
     <dd>{ hoveredEviction.mhi }</dd>
+
+    <dt>Race</dt>
+    <dd> { hoveredEviction.majority_race } </dd>
+
+    <dt>House Type</dt>
+    <dd> { hoveredEviction.family_bins } </dd>
+
+    <dt>Elderly in House</dt>
+    <dd> { hoveredEviction.elder_bins } </dd>
+
 
 </dl>
 <svg viewBox="0 0 {width} {height}" bind:this={svg}>
@@ -282,10 +321,101 @@
     <g transform="translate({usableArea.top})" bind:this={yAxis}/>
     
     <g class="dots">
+    <!-- MAKE SURE TO SHIFT ALL X VALUES BY + xScale.bandwidth() / 2 -->
+    {#each family_bins as bin_type}
+        {#if bin_type === "family"}
+        <line 
+            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.family.min) }
+            y2={ yScale(box_plot_stats.family.max) }
+            stroke="black"
+            width=40
+        />
+        <line
+            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.family.q2) }
+            y2={ yScale(box_plot_stats.family.q2) }
+            stroke="black"
+            width=80
+        />
+
+        <rect
+            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+            y={yScale(box_plot_stats.family.q3)} 
+            width={boxWidth}
+            height={yScale(box_plot_stats.family.q1) - yScale(box_plot_stats.family.q3)}
+            stroke="black"
+            fill="blue"
+            fill-opacity=0.5
+        />
+        {/if}
+
+        {#if bin_type === "non-family"}
+        <line 
+            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.non_family.min) }
+            y2={ yScale(box_plot_stats.non_family.max) }
+            stroke="black"
+            width=40
+        />
+        <line
+            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.non_family.q2) }
+            y2={ yScale(box_plot_stats.non_family.q2) }
+            stroke="black"
+            width=80
+        />
+        <rect
+            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+            y={yScale(box_plot_stats.non_family.q3)} 
+            width={boxWidth}
+            height={yScale(box_plot_stats.non_family.q1) - yScale(box_plot_stats.non_family.q3)}
+            stroke="black"
+            fill="blue"
+            fill-opacity=0.5
+        />
+        {/if}
+
+        
+        {#if bin_type === "mixed"}
+        <line 
+            x1={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.mixed.min) }
+            y2={ yScale(box_plot_stats.mixed.max) }
+            stroke="black"
+            width=40
+        />
+        <line
+            x1={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2 }
+            x2={ xScale(bin_type) + boxWidth/2 + xScale.bandwidth() / 2 }
+            y1={ yScale(box_plot_stats.mixed.q2) }
+            y2={ yScale(box_plot_stats.mixed.q2) }
+            stroke="black"
+            width=80
+        />
+        <rect
+            x={ xScale(bin_type) - boxWidth/2 + xScale.bandwidth() / 2}
+            y={yScale(box_plot_stats.mixed.q3)} 
+            width={boxWidth}
+            height={yScale(box_plot_stats.mixed.q1) - yScale(box_plot_stats.mixed.q3)}
+            stroke="black"
+            fill="blue"
+            fill-opacity=0.5
+        />
+        {/if}
+        
+    {/each}
+    
     {#each data as d, index}
+        
         <circle 
             class:selected={isDataSelected(d)}
-            cx={ xScale(d.family_bins) + xScale.bandwidth() / 2}
+            cx={ xScale(d.family_bins) + xScale.bandwidth() / 3.2 + Math.random()*80}
             cy={ yScale(d.eviction_rate) }
             r='3'
             fill="#B19CD9"
@@ -303,7 +433,7 @@
     </g>
 </svg>
 
-<p>{hasSelection ? selectedEviction.length : "No"} eviction data selected</p>
+<!-- <p>{hasSelection ? selectedEviction.length : "No"} eviction data selected</p> -->
     <!-- <dl class="meta_legend">
         <Pie data={languageBreakdownArray}></Pie>
     </dl> -->
