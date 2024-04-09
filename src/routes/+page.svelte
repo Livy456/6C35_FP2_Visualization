@@ -64,7 +64,7 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("binned_data.csv", row=> ({
+        data = await d3.csv("../binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
@@ -78,7 +78,6 @@
     // [y_min - (y_min*0.05), y_max + (y_max * 0.05)]
 
     // Changes the metric to Household type
-    
     
     $: {
         d3.select(svg).call(d3.brush().on("start brush end", brushed));
