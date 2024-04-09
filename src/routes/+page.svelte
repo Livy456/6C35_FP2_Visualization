@@ -64,12 +64,13 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("./binned_data.csv", row=> ({
+        data = await d3.csv("./static/binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
             family_bins: String(row.family_bins)
         }));
+
     });
 
     $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
@@ -118,7 +119,6 @@
     $: box_plot_stats_elderly.some_elder = calculate_box_plot(data_elders);
     $: box_plot_stats_elderly.no_elder = calculate_box_plot(data_no_elders);
     
-
     // function updateMetric(evt)
     // {
     //     let metric = evt.value;
@@ -347,7 +347,7 @@
     
 </style>
 
-<h2 class="meta">Summary</h2>
+<h2 class="meta">FP2 Visualization</h2>
 <!-- on:click={ function() {metric_to_graph= "Race"} } -->
 <div class="metric_selection">
     <input type="button" value="Race" on:click={ function() {metric_to_graph= "Race"} }>
@@ -355,7 +355,7 @@
     <input type="button" value="Household Type" on:click={ function() {metric_to_graph= "Household Type"} }>
 </div>
 
-<h2 style="margin-top: 3rem">Number of Evictions vs {metric_to_graph}</h2>
+<h2 style="margin-top: 3rem"> Number of Evictions vs {metric_to_graph}</h2>
     
 <dl id="eviction-tooltip" class="info tooltip" 
     hidden={hoveredIndex === -1}
@@ -485,10 +485,11 @@
         
             <circle 
                 class:selected={isDataSelected(d)}
-                cx={ xScaleHousehold(d.family_bins) + xScaleHousehold.bandwidth() / 3.2 + Math.random()*80}
+                cx={ xScaleHousehold(d.family_bins) + xScaleHousehold.bandwidth() / 3.5 + Math.random()*90}
                 cy={ yScale(d.eviction_rate) }
                 r='3'
-                fill="#B19CD9"
+                fill="black"
+                fill-opacity= {Math.random()+0.3}
                 on:mouseenter= {evt=> dotInteraction(index, evt)}
                 on:mouseleave={evt => dotInteraction(index, evt)}
                 tabindex="0"
@@ -634,10 +635,11 @@
         
             <circle 
                 class:selected={isDataSelected(d)}
-                cx={ xScaleRace(d.majority_race) + xScaleRace.bandwidth() / 3.2 + Math.random()*80}
+                cx={ xScaleRace(d.majority_race) + xScaleRace.bandwidth() / 4.5 + Math.random()*100}
                 cy={ yScale(d.eviction_rate) }
                 r='3'
-                fill="#B19CD9"
+                fill="black"
+                fill-opacity={Math.random() + 0.2}
                 on:mouseenter= {evt=> dotInteraction(index, evt)}
                 on:mouseleave={evt => dotInteraction(index, evt)}
                 tabindex="0"
@@ -720,10 +722,11 @@
         
             <circle 
                 class:selected={isDataSelected(d)}
-                cx={ xScaleElder(d.elder_bins) + xScaleElder.bandwidth() / 3.2 + Math.random()*80}
+                cx={ xScaleElder(d.elder_bins) + xScaleElder.bandwidth() / 3.2 + Math.random()*100}
                 cy={ yScale(d.eviction_rate) }
                 r='3'
-                fill="#B19CD9"
+                fill="black"
+                fill-opacity={Math.random()+0.2}
                 on:mouseenter= {evt=> dotInteraction(index, evt)}
                 on:mouseleave={evt => dotInteraction(index, evt)}
                 tabindex="0"
