@@ -64,7 +64,7 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("../../binned_data.csv", row=> ({
+        data = await d3.csv("./binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
