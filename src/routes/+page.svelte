@@ -462,9 +462,12 @@
         grid-template-columns: 5fr 5fr;
         grid-template-rows: 5fr 5fr;
         padding: 0px;
-        input{
-            column-gap: 10px;
-        }
+        
+    }
+
+    input{
+        column-gap: 10px;
+        row-gap: 10px;
     }
 
     .family_selection{
