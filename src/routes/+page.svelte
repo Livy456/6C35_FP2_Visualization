@@ -454,6 +454,23 @@
         grid-template-rows: 5fr 5fr 5fr;
         /* grid-template-columns: 5fr 5fr; */
     }
+
+    input:hover{
+        background-color:bisque;
+        transition: 200ms;
+        font-style: bold;
+        border-radius: 5px;
+    }
+
+    input:active{
+        background-color: rgb(132, 116, 95);
+    }
+
+    input:focus{
+        background-color: rgb(81, 61, 8);
+        color:white;
+    }
+    
     
 </style>
 
