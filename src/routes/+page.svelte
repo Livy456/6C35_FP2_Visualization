@@ -274,11 +274,11 @@
             }
         }
 
-        if (metric.includes("Elderly"))
+        if (metric.includes("Elder"))
         {
             // account for the x shift
             // gets coordinate of commit data point
-            let data_x_coord = xScaleElder(dot.elder_bins) + xScaleElder.bandwidth() / 5.5;
+            let data_x_coord = xScaleElder(dot.elder_bins) + xScaleElder.bandwidth() / 3.5;
             let data_y_coord = yScale(dot.eviction_rate)
 
             // checks if commit data point is within selected brush region
@@ -295,7 +295,7 @@
         {
             // account for the x shift
             // gets coordinate of commit data point
-            let data_x_coord = xScaleCorp(dot.corp_bins) + xScaleCorp.bandwidth() / 5.5;
+            let data_x_coord = xScaleCorp(dot.corp_bins) + xScaleCorp.bandwidth() / 4.5;
             let data_y_coord = yScale(dot.eviction_rate)
 
             // checks if commit data point is within selected brush region
