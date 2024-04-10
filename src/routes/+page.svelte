@@ -242,7 +242,7 @@
         let bottom_right = {x: brushedSelection[1][0], y: brushedSelection[1][1]};
 
         
-        if (metric === "Family Type")
+        if (metric.includes("Family Type"))
         {
             // account for the x shift
             // gets coordinate of commit data point
@@ -258,7 +258,7 @@
             }
         }
 
-        if (metric === "Race")
+        if (metric.includes("Race"))
         {
             // account for the x shift
             // gets coordinate of commit data point
@@ -273,10 +273,39 @@
                 return true;
             }
         }
-            
 
-        // console.log("I haven't been brushed!!!");
+        if (metric.includes("Elderly"))
+        {
+            // account for the x shift
+            // gets coordinate of commit data point
+            let data_x_coord = xScaleElder(dot.elder_bins) + xScaleElder.bandwidth() / 5.5;
+            let data_y_coord = yScale(dot.eviction_rate)
 
+            // checks if commit data point is within selected brush region
+            if(data_x_coord >= top_left.x && data_x_coord <= bottom_right.x && 
+            data_y_coord >= top_left.y && data_y_coord <= bottom_right.y)
+            {
+                console.log("I'm brushed race data!!");
+                return true;
+            }
+        }
+          
+        
+        if (metric.includes("Corporate"))
+        {
+            // account for the x shift
+            // gets coordinate of commit data point
+            let data_x_coord = xScaleCorp(dot.corp_bins) + xScaleCorp.bandwidth() / 5.5;
+            let data_y_coord = yScale(dot.eviction_rate)
+
+            // checks if commit data point is within selected brush region
+            if(data_x_coord >= top_left.x && data_x_coord <= bottom_right.x && 
+            data_y_coord >= top_left.y && data_y_coord <= bottom_right.y)
+            {
+                console.log("I'm brushed race data!!");
+                return true;
+            }
+        }
         return false;
     }
     
