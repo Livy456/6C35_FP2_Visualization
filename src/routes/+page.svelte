@@ -155,6 +155,16 @@
     $: box_plot_stats_corp.medium = calculate_box_plot(data_corp_medium);
     $: box_plot_stats_corp.high = calculate_box_plot(data_corp_high);
     
+    // using metric_to_graph use two nested for loops to 
+    // each through the different bin types (race, elderly, corp, family)
+    // can then use filter, or rollup to filter the data based on the 
+    // different bin types to compute the box plots for each bin
+    // store the box plots for specific categories of bin types in object
+
+    // and then iterate through the specific categories in each bin type
+    // and plot the line plot and the scatterplot with only the
+    // filtered data
+
     // function updateMetric(evt)
     // {
     //     let metric = evt.value;
@@ -216,9 +226,12 @@
         let quantile2 = d3.quantile(eviction_rate_array, 0.5);
         let quantile3 = d3.quantile(eviction_rate_array, 0.75);
         let innerQuantileRange = quantile3 - quantile1;
-        let minimum = quantile1 - .25*innerQuantileRange; // MIGHT NEED TO RECALCULATE THIS, ORIGINALLY -1.5*innerQuartileRange
+        let minimum = quantile1 - 1.5*innerQuantileRange;
         let maximum = quantile3 + 1.5*innerQuantileRange;
-        let summary_stats = {q1: quantile1, q2: quantile2, q3:quantile3, innerQuantile:innerQuantileRange, min: minimum, max:maximum }
+        let summary_stats = {q1: quantile1, q2: quantile2, q3:quantile3, 
+            innerQuantile:innerQuantileRange, min: d3.max([minimum, 0]), 
+            max:d3.min([maximum, height]) }
+            // makes sure that the min and max lines do not exceed the bounds of the plot
         
         console.log(summary_stats);
 
@@ -701,7 +714,8 @@
                         cy={ yScale(d.eviction_rate) }
                         r='3'
                         fill="black"
-                        fill-opacity= {Math.random()+0.3}
+                        fill-opacity= 60%
+                        stroke="white"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)}
                         tabindex="0"
@@ -853,7 +867,8 @@
                         cy={ yScale(d.eviction_rate) }
                         r='3'
                         fill="black"
-                        fill-opacity={Math.random() + 0.2}
+                        fill-opacity=60%
+                        stroke="white"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)}
                         tabindex="0"
@@ -940,7 +955,8 @@
                         cy={ yScale(d.eviction_rate) }
                         r='3'
                         fill="black"
-                        fill-opacity={Math.random()+0.2}
+                        fill-opacity=60%
+                        stroke="white"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)}
                         tabindex="0"
@@ -1053,7 +1069,8 @@
                         cy={ yScale(d.eviction_rate) }
                         r='3'
                         fill="black"
-                        fill-opacity= {Math.random()+0.3}
+                        fill-opacity= 60%
+                        stroke="white"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)}
                         tabindex="0"
