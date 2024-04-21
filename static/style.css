@@ -75,11 +75,7 @@ input:focus{
     color:white;
 }
 
-@keyframes marching-ants {
-    to{
-        stroke-dashoffset: -8;
-    }
-}
+
 
 svg :global(.selection){
     fill-opacity: 10%;

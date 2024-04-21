@@ -183,6 +183,12 @@ div.full_graph{
     padding-left: 2fr;
 }
 
+@keyframes marching-ants {
+    to{
+        stroke-dashoffset: -8;
+    }
+}
+
 p{
     display: inline;
 }
