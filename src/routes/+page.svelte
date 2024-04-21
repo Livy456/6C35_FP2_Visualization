@@ -3,8 +3,10 @@
     import { onMount } from "svelte";
     import BinGraph from "./BinGraph.svelte";
     import MapVisual from "./MapVisual.svelte";
+    import DotAnimation from "./DotAnimation.svelte";
 
     let data = [];
+    let temp_data = [];
     let width = 800, height = 275; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
     let xScaleHousehold = d3.scaleBand();
@@ -25,6 +27,7 @@
     let box_plot_stats_elder_array = [];
     let box_plot_stats_corp_array = [];
     let metric_to_graph = "Family Type";
+    let income = 25;
         
     // defining axes
     let margin = {top: 10, right: 10, bottom: 30, left:40};
@@ -148,7 +151,7 @@
 
     <div class="narrative1">
         <section>
-            <h2>Goal</h2>
+            <h2>Massachusetts Needs Winter Eviction Bans</h2>
             <p>
                 Despite ranking as one of the coldest major cities in America [1], Boston lacks eviction protection during winter months.
                 To quote the article, “Mass. should ban evictions during winter months” written by Gary Klein and Sarah Rosenkrantz, 
@@ -160,36 +163,46 @@
             </p>
         </section>
     </div>
-    
-    <div class="metric_selection">
-        <h4>Race</h4>
-        <dl class="race_selection">
-            <input type="button" value="White" on:click={ function() {metric_to_graph= "Race White"} }>
-            <input type="button" value="Black" on:click={ function() {metric_to_graph= "Race Black"} }>
-            <input type="button" value="Latino" on:click={ function() {metric_to_graph= "Race Latino"} }>
-            <input type="button" value="Other" on:click={ function() {metric_to_graph= "Race Other"} }>
-        </dl>
+    <div class="selection_column">
+        <div class="income_slider">
+            <h2>Income</h2>
+            <!-- <input type="range" min="0" max="100" value="25" class="slider">
+            <input type="range" min="0" max="100" value="75" class="slider"> -->
+            <input class="slider" type="range" min=2 max="40" bind:value={income}>
+            <label class="slider_label">${income}0,000</label>
+        </div>
         
-        <h4>Family Type</h4>
-        <dl class="family_selection">
-            <input type="button" value="Mixed" on:click={ function() {metric_to_graph= "Family Type Mixed"} }>
-            <input type="button" value="Non Family" on:click={ function() {metric_to_graph= "Family Type Non-Fam"} }>
-            <input class="bottom_row" type="button" value="Family" on:click={ function() {metric_to_graph= "Family Type FamilyType"} }>
-        </dl>
-        
-        <h4>Elderly Population</h4>
-        <dl class="elderly_selection">
-            <input type="button" value="No Elderly" on:click={ function() {metric_to_graph= "No Elderly"} }>
-            <input type="button" value="Some Elderly" on:click={ function() {metric_to_graph= "Some Elderly"} }>
-        </dl>
-        
-        <h4>Corporate Ownership</h4>
-        <dl class="corporate_selection">
-            <input type="button" value="Low Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Low"} }>
-            <input type="button" value="Medium Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Medium"} }>
-            <input type="button" value="High Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership High"} }>
-        </dl>
+        <div class="metric_selection">
+            <h4>Race</h4>
+            <dl class="race_selection">
+                <input type="button" value="White" on:click={ function() {metric_to_graph= "Race White"} }>
+                <input type="button" value="Black" on:click={ function() {metric_to_graph= "Race Black"} }>
+                <input type="button" value="Latino" on:click={ function() {metric_to_graph= "Race Latino"} }>
+                <input type="button" value="Other" on:click={ function() {metric_to_graph= "Race Other"} }>
+            </dl>
+            
+            <h4>Family Type</h4>
+            <dl class="family_selection">
+                <input type="button" value="Mixed" on:click={ function() {metric_to_graph= "Family Type Mixed"} }>
+                <input type="button" value="Non Family" on:click={ function() {metric_to_graph= "Family Type Non-Fam"} }>
+                <input class="bottom_row" type="button" value="Family" on:click={ function() {metric_to_graph= "Family Type FamilyType"} }>
+            </dl>
+            
+            <h4>Elderly Population</h4>
+            <dl class="elderly_selection">
+                <input type="button" value="No Elderly" on:click={ function() {metric_to_graph= "No Elderly"} }>
+                <input type="button" value="Some Elderly" on:click={ function() {metric_to_graph= "Some Elderly"} }>
+            </dl>
+            
+            <h4>Corporate Ownership</h4>
+            <dl class="corporate_selection">
+                <input type="button" value="Low Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Low"} }>
+                <input type="button" value="Medium Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Medium"} }>
+                <input type="button" value="High Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership High"} }>
+            </dl>
+        </div>
     </div>
+    
 
     <div class="full_graph">
         {#if metric_to_graph.includes("Family")}
@@ -225,7 +238,43 @@
         </section>
     </div>
 
+    <div class="eviction_animation">
+        {#if metric_to_graph.includes("Family")}
+            <DotAnimation data={temp_data} text={"Hello"}
+            bins={family_bins} metric={metric_to_graph} />
+        {/if}
+
+        {#if metric_to_graph.includes("Race")}
+            <DotAnimation data={temp_data} text={"Hello"}
+            bins={race_bins} metric={metric_to_graph} />
+        {/if}
+
+        {#if metric_to_graph.includes("Elder")}
+            <DotAnimation data={temp_data} text={"Hello"}
+            bins={elder_bins} metric={metric_to_graph} />
+        {/if}
+
+        {#if metric_to_graph.includes("Corporate")}
+            <DotAnimation data={temp_data} text={"Hello"}
+            bins={corp_bins} metric={metric_to_graph} />
+        {/if}
+        
+    </div>
+
     <div class="map_visualization">
-        <MapVisual></MapVisual>
+        
+        <MapVisual/>
+        <section>
+            This will be the text for the map visualization.
+            <hr>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris porttitor velit ac 
+            nisi lacinia, sed aliquet nunc convallis. Vivamus dignissim neque enim, sit amet 
+            venenatis urna sagittis non. Pellentesque habitant morbi tristique senectus et netus 
+            et malesuada fames ac turpis egestas. Fusce congue leo ac felis volutpat cursus. 
+            Phasellus ut ultrices nibh, vel hendrerit tortor. In eu luctus lectus. Vestibulum 
+            ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla 
+            rhoncus id ante ac cursus. Proin ultrices nisi vehicula ante commodo, sed sollicitudin 
+            nibh feugiat. Vivamus tincidunt tortor id neque dictum, pellentesque egestas dolor varius.
+        </section>
     </div>
 </div>

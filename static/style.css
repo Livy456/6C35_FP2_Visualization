@@ -20,17 +20,28 @@ h2.meta{
     }
 }
 
+.selection_column{
+    grid-row: 2 / -1;
+    grid-column: 1;
+}
+
 .metric_selection{
-    margin: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
     display: grid;
     text-align: center;
-    padding-right: 10px;
+    padding-right: 0px;
+    padding-top: 0px;
     border-color: black;
     border-style: solid;
     border-radius: 2px;
     margin-right: 10px;
     padding: 10px;
     border-radius: 5px;
+    /* grid-column: 1; */
+    /* grid-row: 3; */
+    box-shadow: 5px 5px 5px rgb(147, 121, 121);
+    opacity: 80%;
 }
 
 .meta{
@@ -41,7 +52,8 @@ h2.meta{
     display: grid;
     grid-template-columns: 5fr 5fr;
     grid-template-rows: 5fr 5fr;
-    padding: 0px;
+    padding-top: 0px;
+    padding-right:10px;
 }
 
 input{
@@ -157,8 +169,8 @@ dl.info
 
 div.full_page{
     display: grid;
-    grid-template-columns: 25fr 100fr 25fr;
-    grid-template-rows: 15fr auto;
+    grid-template-columns: 25fr 180fr 10fr 110fr;
+    grid-template-rows: 10fr auto auto;
 }
 
 .narrative1{
@@ -173,17 +185,91 @@ div.full_page{
 
 .simulate_winter_ban{
     border: 2px solid black;
-    grid-column: 3;
-    padding: 10px;
+    grid-column: 4;
+    grid-row: 2;
+    padding: 25px;
     margin: 5px;
     text-align: center;
     font-size: 20px;
     opacity: 80%;
     border-radius: 5px;
+    height: fit-content;
+    width:fit-content;
 
     input{
         font-size: 20px;
         border-radius: 10px;
         padding: 10px;
     }
+}
+
+.income_slider{
+    grid-column: 1;
+    grid-row: 2;
+    height: auto;
+    display: grid;
+    grid-template-rows: 10fr 10fr 10fr;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin:5px;
+    padding: 10px;
+    box-shadow: 5px 5px 5px rgb(147, 121, 121);
+    opacity: 80%;
+
+    .slider {
+        appearance: none; /* removes browser-specific styling */
+        width: 175px; /* width of slider */
+        height: 25px; /* height of slider */
+        background: #05821a ; /* orange background */
+        outline: none; /* remove outline */
+        border-radius: 50px; /* round corners */
+    }
+    
+    .slider::-webkit-slider-thumb {
+      appearance: none; /* removes browser-specific styling */
+      width: 20px; /* handle width */
+      height: 20px; /* handle height */
+      border-radius: 50%; /* make it circular */
+      background: black; /* white color */
+      cursor: pointer; /* cursor on hover */
+    } 
+
+    .slider_label{
+        font-style: italic;
+        font-size: 25px;
+        font-family: 'Times New Roman';
+    }
+}
+
+.map_visualization{
+    grid-column: 4;
+    grid-row: 3;
+    height: fit-content;
+    /* background-color: black; */
+    section{
+        border: 2px solid black;
+        border-radius: 3px;
+        box-shadow: 5px 5px 5px grey;
+        padding:10px;
+        margin-top:10px;
+    }
+}
+
+.eviction_animation{
+    grid-column: 2 / 4;
+}
+
+div.full_graph{
+    display: subgrid;
+    border: rgb(122, 115, 115);
+    border-style: solid;
+    border-radius: 2px;
+    padding-left: 2fr;
+    margin:5px;
+    padding:10px;
+
+    .boxplot{
+        grid-column: 2 / 3;
+        grid-row: 3;
+    }   
 }

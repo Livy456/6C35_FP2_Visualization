@@ -181,15 +181,6 @@
 </script>
 
 <style>
-div.full_graph{
-    display: subgrid;
-    border: rgb(122, 115, 115);
-    border-style: solid;
-    border-radius: 2px;
-    padding-left: 2fr;
-    margin:5px;
-    padding:10px;
-}
 
 @keyframes marching-ants {
     to{
@@ -240,7 +231,7 @@ p{
         <dt>Corporate Ownership</dt>
         <dd> { hoveredEviction.corp_bins } </dd>        
     </dl>
-    <svg viewBox="0 0 {width} {height}" bind:this={svg}>
+    <svg class="boxplot" viewBox="0 0 {width} {height}" bind:this={svg}>
         <g transform="translate(0, {usableArea.bottom})" bind:this={xAxis} />
         <g class="gridlines" transform="translate({usableArea.left}, 0)" bind:this={yAxisGridlines} />
         <g transform="translate({usableArea.top})" bind:this={yAxis}/>
@@ -250,33 +241,34 @@ p{
 
         {#each binned_data as bin, index}
             {d3.select(xAxis).call(d3.axisBottom(xScale))}
-            <line 
-                x1={ xScale(bin_type[index]) + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type[index]) + xScale.bandwidth() / 2 }
-                y1={ yScale(bin.min) }
-                y2={ yScale(bin.max) }
-                stroke="black"
-                width=40
-            />
+            {#if bin.q1 }
+                <line 
+                    x1={ xScale(bin_type[index]) + xScale.bandwidth() / 2 }
+                    x2={ xScale(bin_type[index]) + xScale.bandwidth() / 2 }
+                    y1={ yScale(bin.min) }
+                    y2={ yScale(bin.max) }
+                    stroke="black"
+                    width=40
+                />
 
-            <line
-                x1={ xScale(bin_type[index]) - boxWidth/2 + xScale.bandwidth() / 2 }
-                x2={ xScale(bin_type[index]) + boxWidth/2 + xScale.bandwidth() / 2 }
-                y1={ yScale(bin.q2) }
-                y2={ yScale(bin.q2) }
-                stroke="black"
-                width=80
-            />
-            
-            <rect
-                x={ xScale(bin_type[index]) - boxWidth/2 + xScale.bandwidth() / 2}
-                y={ yScale(bin.q3) } 
-                width={boxWidth}
-                height={yScale(bin.q1) - yScale(bin.q3)}
-                stroke="black"
-                fill={fillColor(bin_type[index])}
-                fill-opacity=0.5
-            />        
+                <line
+                    x1={ xScale(bin_type[index]) - boxWidth/2 + xScale.bandwidth() / 2 }
+                    x2={ xScale(bin_type[index]) + boxWidth/2 + xScale.bandwidth() / 2 }
+                    y1={ yScale(bin.q2) }
+                    y2={ yScale(bin.q2) }
+                    stroke="black"
+                    width=80
+                />
+                <rect
+                    x={ xScale(bin_type[index]) - boxWidth/2 + xScale.bandwidth() / 2}
+                    y={ yScale(bin.q3) } 
+                    width={boxWidth}
+                    height={yScale(bin.q1) - yScale(bin.q3)}
+                    stroke="black"
+                    fill={fillColor(bin_type[index])}
+                    fill-opacity=0.5
+                />     
+            {/if}   
         {/each}
         
         <!-- MIGHT NEED TO PUT IN THE SPECIFIC BIN TYPE AND USE IF STATEMENTS -->
