@@ -20,17 +20,10 @@
     let race_bins = ["Black", "White", "Latino", "Other"];
     let elder_bins = ["some elders", "no elders"];
     let corp_bins = ["low", "medium", "high"];
-    let data_mixed;
-    let data_family;
-    let data_non_family;
     let box_plot_stats_household_array = [];
     let box_plot_stats_race_array = [];
     let box_plot_stats_elder_array = [];
     let box_plot_stats_corp_array = [];
-    let box_plot_stats_household = {mixed: {}, non_family: {}, family: {}};
-    let box_plot_stats_race = {black: {}, white: {}, latino: {}, other: {}};
-    let box_plot_stats_elderly = {some_elder: {}, no_elder: {}};
-    let box_plot_stats_corp = {low: {}, medium: {}, high: {}};
     let metric_to_graph = "Family Type";
         
     // defining axes
@@ -71,45 +64,54 @@
     $: xScaleElder = xScaleElder.domain(elder_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);
     $: xScaleCorp = xScaleCorp.domain(corp_bins).range( [usableArea.left, usableArea.right] ).padding(0.2);
 
-    // Computing box plots for family bin data
-    $: data_mixed = data.filter((d) => d.family_bins === "mixed");
-    $: data_family = data.filter((d) => d.family_bins === "family");
-    $: data_non_family = data.filter((d) => d.family_bins === "non-family");
-    $: box_plot_stats_household.family = calculate_box_plot(data_family);
-    $: box_plot_stats_household.non_family = calculate_box_plot(data_non_family);
-    $: box_plot_stats_household.mixed = calculate_box_plot(data_mixed);
-    $: box_plot_stats_household_array = [box_plot_stats_household.family, box_plot_stats_household.non_family, box_plot_stats_household.mixed]
+    // Computing box plots for family binned data
+    $: box_plot_stats_household_array = computeStats(family_bins, "family", data);
 
-    // Computing box plots for race data
-    $: data_black = data.filter((d) => d.majority_race === "Black");
-    $: data_white = data.filter((d) => d.majority_race === "White");
-    $: data_latino = data.filter((d) => d.majority_race === "Latino");
-    $: data_other = data.filter((d) => d.majority_race === "Other");
-    $: box_plot_stats_race.black = calculate_box_plot(data_black);
-    $: box_plot_stats_race.white = calculate_box_plot(data_white);
-    $: box_plot_stats_race.latino = calculate_box_plot(data_latino);
-    $: box_plot_stats_race.other = calculate_box_plot(data_other);
-    $: box_plot_stats_race_array = [box_plot_stats_race.black, box_plot_stats_race.white, box_plot_stats_race.latino, box_plot_stats_race.other];
+    // Computing box plots for race binned data
+    $: box_plot_stats_race_array = computeStats(race_bins, "race", data);
 
-    // Computing box plots for elder or no elders
-    $: data_elders = data.filter((d) => d.elder_bins === "some elders");
-    $: data_no_elders = data.filter((d) => d.elder_bins === "no elders");
-    $: box_plot_stats_elderly.some_elder = calculate_box_plot(data_elders);
-    $: box_plot_stats_elderly.no_elder = calculate_box_plot(data_no_elders);
-    $: box_plot_stats_elder_array = [box_plot_stats_elderly.some_elder, box_plot_stats_elderly.no_elder];
+    // Computing box plots for elder binned data
+    $: box_plot_stats_elder_array = computeStats(elder_bins, "elder", data);
 
-    // Computing box plots for corporate ownership
-    $: data_corp_low = data.filter((d) => d.corp_bins === "low");
-    $: data_corp_medium = data.filter((d) => d.corp_bins === "medium");
-    $: data_corp_high = data.filter((d) => d.corp_bins === "high");
-    $: box_plot_stats_corp.low = calculate_box_plot(data_corp_low);
-    $: box_plot_stats_corp.medium = calculate_box_plot(data_corp_medium);
-    $: box_plot_stats_corp.high = calculate_box_plot(data_corp_high);
-    $: box_plot_stats_corp_array = [box_plot_stats_corp.low, box_plot_stats_corp.medium, box_plot_stats_corp.high];
+    // Computing box plots for corporate ownership binned data
+    $: box_plot_stats_corp_array = computeStats(corp_bins, "corporate", data);
     
-    function filterData()
+    // compute boxplots for each category for a bin (family, race, elder, corporate ownership)
+    function computeStats(bins, metric, data)
     {
-        
+        let summary_stats = [];
+        let data_filtered;
+
+        for(let bin of bins)
+        {
+            // checks if metric to graph is associated with household type, family/non family/mixed
+            if(metric === "family")
+            {
+                data_filtered = data.filter((d) => d.family_bins === bin);
+            }
+
+            // checks if metric to graph is associated with race, white/black/latino/other
+            else if(metric === "race")
+            {
+                data_filtered = data.filter((d) => d.majority_race === bin);
+            }
+            
+            // checks if metric to graph is associated with elder, some elders/no elders
+            else if(metric === "elder")
+            {
+                data_filtered = data.filter((d) => d.elder_bins === bin);
+            }
+
+            // assumes the metric to graph is associated with corporate ownership, low/medium/high
+            else
+            {
+                data_filtered = data.filter((d) => d.corp_bins === bin);
+            }
+            
+            let summary_stat = calculate_box_plot(data_filtered);
+            summary_stats.push(summary_stat);
+        }
+        return summary_stats;
     }
 
     function calculate_box_plot(binned_data)
@@ -118,14 +120,8 @@
 
         for (let d of binned_data)
         {
-            // console.log(d);
-            // if (d.eviction_rate)
-            // {
             eviction_rate_array.push(d.eviction_rate);
-            // }
         }
-
-        // console.log(eviction_rate_array);
 
         let quantile1 = d3.quantile(eviction_rate_array, 0.25);
         let quantile2 = d3.quantile(eviction_rate_array, 0.5);
