@@ -1,0 +1,160 @@
+h2.meta{
+    font-size: 50px;
+    font-family: 'Segoe UI';
+}
+
+.meta_legend{
+    display: grid;
+
+    dd{
+        grid-row: 1;
+        margin: 0px;
+        font-size: 15px;
+        text-transform: uppercase;
+        color: rgb(99, 99, 99);
+        font-family: 'Segoe UI';
+    }
+
+    dt{
+        grid-row: 2;
+    }
+}
+
+.metric_selection{
+    margin-bottom: 10px;
+    display: grid;
+    text-align: center;
+    padding-right: 10px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 2px;
+    margin-right: 10px;
+    padding: 10px;
+}
+
+.race_selection{
+    display: grid;
+    grid-template-columns: 5fr 5fr;
+    grid-template-rows: 5fr 5fr;
+    padding: 0px;
+}
+
+input{
+    column-gap: 10px;
+    row-gap: 10px;
+}
+
+.family_selection{
+    display: grid;
+    grid-template-rows: 5fr 5fr 5fr;
+}
+
+.elderly_selection{
+    display: grid;
+    grid-template-columns: 5fr 5fr;
+}
+
+.corporate_selection{
+    display: grid;
+    grid-template-rows: 5fr 5fr 5fr;
+}
+
+input:hover{
+    background-color:bisque;
+    transition: 200ms;
+    font-style: bold;
+    border-radius: 5px;
+}
+
+input:active{
+    background-color: rgb(132, 116, 95);
+}
+
+input:focus{
+    background-color: rgb(81, 61, 8);
+    color:white;
+}
+
+@keyframes marching-ants {
+    to{
+        stroke-dashoffset: -8;
+    }
+}
+
+svg :global(.selection){
+    fill-opacity: 10%;
+    stroke: black;
+    stroke-opacity: 70%;
+    stroke-dasharray: 5 3;
+    animation: marching-ants 2s linear infinite;
+}
+
+svg{
+    margin:5 0px;
+}
+
+dl.info
+{
+    display: grid;
+    grid-template-columns: auto 1fr;
+    background-color: oklch(100% 0% 0 / 80%);
+    box-shadow: 5px 5px 5px lightslategrey;
+    border-radius: 5%;
+    backdrop-filter: blur(10px);
+    padding:10px;
+    /* transition-duration: 50ms; */
+    transition-property: opacity, visibility;
+
+    &[hidden]:not(:hover, :focus-within){
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.tooltip{
+    position: fixed;
+    margin:15px;
+}
+
+.gridlines{
+    stroke-opacity: 0.2;
+}
+
+.dots{
+
+    circle.selected{
+        fill: rgb(228, 24, 24)
+    }
+
+    circle{
+        transition: 200ms;
+        transform-origin: center;
+        transform-box: fill-box;
+        &:hover
+        {
+            transform: scale(1.5);
+        }
+    }
+}
+
+.meta_legend{
+    display: grid;
+
+    dd{
+        grid-row: 1;
+        margin: 0px;
+        font-size: 15px;
+        text-transform: uppercase;
+        color: rgb(99, 99, 99);
+        font-family: 'Segoe UI';
+    }
+
+    dt{
+        grid-row: 2;
+    }
+}
+
+div.full_page{
+    display: grid;
+    grid-template-columns: 25fr 100fr;
+}
