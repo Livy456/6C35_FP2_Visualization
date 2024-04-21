@@ -1,7 +1,5 @@
 <script>
     import * as d3 from "d3";
-    // import binned_csv from '$static/' ;
-    import { onMount } from "svelte";
     import {
         computePosition,
         autoPlacement,
@@ -14,9 +12,6 @@
     export let binned_info = "";
     export let bin_type = [];
     export let yScale = d3.scaleLinear();
-
-    // BUGS
-        // ALL THE DATA IS BEING PLOTTED ON THE Y-AXIS
 
     let width = 850, height = 275; // changed the height of the graph from 600 to 450
     let xAxis, yAxis;
@@ -31,7 +26,6 @@
     let hasSelection;
     let selectedLines;
     let boxWidth = 100;    
-    // let c_x = 1;
     const format = d3.format(".1~%");
         
     // defining axes
@@ -181,13 +175,16 @@
 </script>
 
 <style>
-
 div.full_graph{
     display: subgrid;
     border: rgb(122, 115, 115);
     border-style: solid;
     border-radius: 2px;
     padding-left: 2fr;
+}
+
+p{
+    display: inline;
 }
 </style>
 <div class="full_graph">
