@@ -252,7 +252,7 @@
             {console.log(box_plot_stats_household_array[0].q1)}
 
             <BinGraph binned_data={box_plot_stats_household_array} yScale={yScale}
-                      xScale={xScaleHousehold} metric={metric_to_graph}
+                      xScale={xScaleHousehold} metric={metric_to_graph} 
                       bin_type={family_bins} data={data} binned_info={"Family Metric"}/>
         {/if}
         {#if metric_to_graph.includes("Race")}

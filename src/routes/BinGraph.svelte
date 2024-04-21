@@ -13,6 +13,7 @@
     export let bin_type = [];
     export let yScale = d3.scaleLinear();
 
+    let fillColor = d3.scaleOrdinal(d3.schemeCategory10);
     let width = 850, height = 275; // changed the height of the graph from 600 to 450
     let xAxis, yAxis;
     let yAxisGridlines;
@@ -53,6 +54,11 @@
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
     
+    // function fill_color(d)
+    // {
+
+    // }
+
     function compute_cx(d)
     {
         if(metric.includes("Family"))
@@ -266,7 +272,7 @@ p{
                 width={boxWidth}
                 height={yScale(bin.q1) - yScale(bin.q3)}
                 stroke="black"
-                fill="red"
+                fill={fillColor(bin_type[index])}
                 fill-opacity=0.5
             />        
         {/each}
