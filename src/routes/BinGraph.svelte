@@ -187,6 +187,8 @@ div.full_graph{
     border-style: solid;
     border-radius: 2px;
     padding-left: 2fr;
+    margin:5px;
+    padding:10px;
 }
 
 @keyframes marching-ants {

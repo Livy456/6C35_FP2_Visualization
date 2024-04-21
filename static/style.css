@@ -21,7 +21,7 @@ h2.meta{
 }
 
 .metric_selection{
-    margin-bottom: 10px;
+    margin: 5px;
     display: grid;
     text-align: center;
     padding-right: 10px;
@@ -30,6 +30,11 @@ h2.meta{
     border-radius: 2px;
     margin-right: 10px;
     padding: 10px;
+    border-radius: 5px;
+}
+
+.meta{
+    font-size: 30px;
 }
 
 .race_selection{
@@ -152,5 +157,33 @@ dl.info
 
 div.full_page{
     display: grid;
-    grid-template-columns: 25fr 100fr;
+    grid-template-columns: 25fr 100fr 25fr;
+    grid-template-rows: 15fr auto;
+}
+
+.narrative1{
+    grid-column: 1 / -1;
+    grid-row: 1;
+    border: 2px solid black;
+    box-shadow: 5px 5px 5px grey;
+    opacity: 6  0%;
+    padding: 10px;
+    margin:5px;
+}
+
+.simulate_winter_ban{
+    border: 2px solid black;
+    grid-column: 3;
+    padding: 10px;
+    margin: 5px;
+    text-align: center;
+    font-size: 20px;
+    opacity: 80%;
+    border-radius: 5px;
+
+    input{
+        font-size: 20px;
+        border-radius: 10px;
+        padding: 10px;
+    }
 }

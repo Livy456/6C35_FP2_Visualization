@@ -1,13 +1,8 @@
 <script>
     import * as d3 from "d3";
-    // import binned_csv from '$static/' ;
     import { onMount } from "svelte";
-    import {
-        computePosition,
-        autoPlacement,
-        offset
-    } from '@floating-ui/dom';
     import BinGraph from "./BinGraph.svelte";
+    import MapVisual from "./MapVisual.svelte";
 
     let data = [];
     let width = 800, height = 275; // changed the height of the graph from 600 to 450
@@ -16,20 +11,11 @@
     let xScaleRace = d3.scaleBand();
     let xScaleElder = d3.scaleBand();
     let xScaleCorp = d3.scaleBand();
-    let rScale = d3.scaleSqrt();
-    let xAxis, yAxis;
     let yAxisGridlines;
-    let hoveredIndex = -1;
-    $: hoveredEviction = data[hoveredIndex]?? {};
-    let tooltipPosition = {x:0, y:0};
-    let evictionTooltip;
-    let svg;
-    let input;
     let brushedSelection;
     let selectedEvictions;
     let hasSelection;
     let selectedLines;
-    let boxWidth = 100;
     let family_bins = ["family", "non-family", "mixed"];
     let race_bins = ["Black", "White", "Latino", "Other"];
     let elder_bins = ["some elders", "no elders"];
@@ -46,37 +32,6 @@
     let box_plot_stats_elderly = {some_elder: {}, no_elder: {}};
     let box_plot_stats_corp = {low: {}, medium: {}, high: {}};
     let metric_to_graph = "Family Type";
-    let data_black_avg;
-    let data_white_avg;
-    let data_latino_avg;
-    let data_other_avg;
-    let data_family_avg;
-    let data_no_family_avg;
-    let data_mixed_avg;
-    let data_elderly_avg;
-    let data_no_elderly_avg;
-    let data_low_avg;
-    let data_medium_avg;
-    let data_high_avg;
-    let black_avg_p = "The average rate at which black tenants get evicted is ${format(data_black_avg, '.2f')}";
-    let white_avg_p = "The average rate at which white tenants get evicted is ${format(data_white_avg, '.2f')}";
-    let latino_avg_p = "The average rate at which latino tenants get evicted is ${format(data_latino_avg, '.2f')}";
-    let other_avg_p = "The average rate at which tenants with another race get evicted is ${format(data_other_avg, '.2f')}";
-    let fam_avg_p = "The average rate at which tenants with family type household get evicted is ${format(data_family_avg, '.2f')}";
-    let non_fam_avg_p = "The average rate at which tenants with non family type household get evicted is ${format(data_no_family_avg, '.2f')}";
-    let mixed_avg_p = "The average rate at which tenants with mixed family type household get evicted is ${format(data_mixed_avg, '.2f')}";
-    let no_elder_avg_p = "The average rate at which tenants with no elderly population in household get evicted is ${format(data_no_elderly_avg, '.2f')}";
-    let elder_avg_p = "The average rate at which tenants with some elderly population in household get evicted is ${format(data_elderly_avg, '.2f')}";
-    let low_avg_p = "The average rate at which tenants living in properties with low corporate ownership get evicted is ${format(data_low_avg, '.2f')}";
-    let medium_avg_p = "The average rate at which tenants living in properties with medium corporate ownership get evicted is ${format(data_medium_avg, '.2f')}";
-    let high_avg_p = "The average rate at which tenants living in properties with high corporate ownership get evicted is ${format(data_high_avg, '.2f')}";
-    let race_avg_p = [black_avg_p, white_avg_p, latino_avg_p, other_avg_p];
-    let family_avg_p = [fam_avg_p, mixed_avg_p, non_fam_avg_p];
-    let elderly_avg_p = [elder_avg_p, no_elder_avg_p];
-    let corp_avg_p = [low_avg_p, medium_avg_p, high_avg_p];
-    let languageBreakdown;
-    let languageBreakdownArray;
-    const format = d3.format(".1~%");
         
     // defining axes
     let margin = {top: 10, right: 10, bottom: 30, left:40};
@@ -105,12 +60,6 @@
     });
 
     $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
-    
-    // $: {
-    //     d3.select(svg).call(d3.brush().on("start brush end", brushed));
-    //     d3.select(svg).selectAll(".dots, .overlay ~ *").raise();
-    // }
-    
     $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
@@ -126,9 +75,6 @@
     $: data_mixed = data.filter((d) => d.family_bins === "mixed");
     $: data_family = data.filter((d) => d.family_bins === "family");
     $: data_non_family = data.filter((d) => d.family_bins === "non-family");
-    $: data_family_avg = d3.mean(data_family, d => d.eviction_rate);
-    $: data_no_family_avg = d3.mean(data_non_family, d => d.eviction_rate);
-    $: data_mixed_avg = d3.mean(data_mixed, d => d.eviction_rate);
     $: box_plot_stats_household.family = calculate_box_plot(data_family);
     $: box_plot_stats_household.non_family = calculate_box_plot(data_non_family);
     $: box_plot_stats_household.mixed = calculate_box_plot(data_mixed);
@@ -139,30 +85,15 @@
     $: data_white = data.filter((d) => d.majority_race === "White");
     $: data_latino = data.filter((d) => d.majority_race === "Latino");
     $: data_other = data.filter((d) => d.majority_race === "Other");
-    $: data_black_avg = d3.mean(data_black, d => d.eviction_rate);
-    $: data_white_avg = d3.mean(data_white, d => d.eviction_rate);
-    $: data_latino_avg = d3.mean(data_latino, d => d.eviction_rate);
-    $: data_other_avg = d3.mean(data_other, d => d.eviction_rate);
     $: box_plot_stats_race.black = calculate_box_plot(data_black);
     $: box_plot_stats_race.white = calculate_box_plot(data_white);
     $: box_plot_stats_race.latino = calculate_box_plot(data_latino);
     $: box_plot_stats_race.other = calculate_box_plot(data_other);
     $: box_plot_stats_race_array = [box_plot_stats_race.black, box_plot_stats_race.white, box_plot_stats_race.latino, box_plot_stats_race.other];
-    
-    
-    
-    //DEBUGGING!!!!
-    // $: console.log(box_plot_stats_race.black);
-    // $: console.log(box_plot_stats_race.white.q1);
-
-
-
 
     // Computing box plots for elder or no elders
     $: data_elders = data.filter((d) => d.elder_bins === "some elders");
     $: data_no_elders = data.filter((d) => d.elder_bins === "no elders");
-    $: data_elderly_avg = d3.mean(data_elders, d => d.eviction_rate);
-    $: data_no_elderly_avg = d3.mean(data_no_elders, d => d.eviction_rate);
     $: box_plot_stats_elderly.some_elder = calculate_box_plot(data_elders);
     $: box_plot_stats_elderly.no_elder = calculate_box_plot(data_no_elders);
     $: box_plot_stats_elder_array = [box_plot_stats_elderly.some_elder, box_plot_stats_elderly.no_elder];
@@ -171,14 +102,16 @@
     $: data_corp_low = data.filter((d) => d.corp_bins === "low");
     $: data_corp_medium = data.filter((d) => d.corp_bins === "medium");
     $: data_corp_high = data.filter((d) => d.corp_bins === "high");
-    $: data_low_avg = d3.mean(data_corp_low, d => d.eviction_rate);
-    $: data_medium_avg = d3.mean(data_corp_medium, d => d.eviction_rate);
-    $: data_high_avg = d3.mean(data_corp_high, d => d.eviction_rate);
     $: box_plot_stats_corp.low = calculate_box_plot(data_corp_low);
     $: box_plot_stats_corp.medium = calculate_box_plot(data_corp_medium);
     $: box_plot_stats_corp.high = calculate_box_plot(data_corp_high);
     $: box_plot_stats_corp_array = [box_plot_stats_corp.low, box_plot_stats_corp.medium, box_plot_stats_corp.high];
     
+    function filterData()
+    {
+        
+    }
+
     function calculate_box_plot(binned_data)
     {   
         let eviction_rate_array = [];
@@ -216,6 +149,22 @@
 </h3>
 
 <div class="full_page">
+
+    <div class="narrative1">
+        <section>
+            <h2>Goal</h2>
+            <p>
+                Despite ranking as one of the coldest major cities in America [1], Boston lacks eviction protection during winter months.
+                To quote the article, “Mass. should ban evictions during winter months” written by Gary Klein and Sarah Rosenkrantz, 
+                “...cities like Chicago and Washington, DC ban evictions during cold weather. And both New York and Connecticut 
+                have bills pending in their legislatures that would permanently ban most evictions during the winter months.”  
+                So this begs the question, why does Boston have no such legislation? Boston’s lack of winter protection 
+                affects historically discriminated groups the most: families, the elderly, and people of color.  
+                The goal of our visualization is to show the effect a winter eviction moratorium would have Boston’s population.
+            </p>
+        </section>
+    </div>
+    
     <div class="metric_selection">
         <h4>Race</h4>
         <dl class="race_selection">
@@ -248,9 +197,6 @@
 
     <div class="full_graph">
         {#if metric_to_graph.includes("Family")}
-            {console.log(box_plot_stats_household_array)}
-            {console.log(box_plot_stats_household_array[0].q1)}
-
             <BinGraph binned_data={box_plot_stats_household_array} yScale={yScale}
                       xScale={xScaleHousehold} metric={metric_to_graph} 
                       bin_type={family_bins} data={data} binned_info={"Family Metric"}/>
@@ -270,5 +216,20 @@
                       xScale={xScaleCorp} metric={metric_to_graph}
                       bin_type={corp_bins} data={data} binned_info={"Corporate Metric"}/>
         {/if}        
+    </div>
+
+    <div class="simulate_winter_ban">
+        <input class="winter_button" type="button" value="Simulate Winter Ban">
+        <section>
+            <p>
+                Click on the <em>"Simulate Winter Ban"</em> button to see how the eviction rate changes 
+                with the removal of evictions during winter months. Additionally, you will see
+                which demographics are most impacted by winter bans.
+            </p>
+        </section>
+    </div>
+
+    <div class="map_visualization">
+        <MapVisual></MapVisual>
     </div>
 </div>
