@@ -192,6 +192,7 @@ p{
     display: inline;
 }
 </style>
+
 <div class="full_graph">
     {#if metric.includes("Race")}
         <h2 style="margin-top: 3rem"> Number of Evictions vs Race</h2>

@@ -3,6 +3,8 @@
     import "../../node_modules/mapbox-gl/dist/mapbox-gl.css" 
     import { onMount } from "svelte";
     import * as d3 from 'd3';
+    export let data = [];
+    export let info = "";
 
     let bike_styling = {line_width: 2, line_color: "green", line_opacity: 0.4}
     let stations = [];
@@ -139,7 +141,7 @@
 
     #map svg{
         /* position:absolute; */
-        z-index: 1; 
+        z-index: 2; 
         /* z-index being 1, Puts the svg element in front of the map */
         /* to use z-index you need to you position property */
         width: 300px;
@@ -147,6 +149,7 @@
         pointer-events: none;
 
         circle{
+            z-index:1;
             fill-opacity: 60%;
             stroke: white;
             pointer-events: auto;
@@ -178,14 +181,13 @@
     
     }
 
-    .slider{
+    /* .slider{
         display: grid;
         grid-template-rows: 5fr 5fr;
         margin-left: auto;
         margin-top: 1px;
         margin-bottom: 15px;
-        /* margin-right: auto; */
-    }
+    } */
 
     em{
         font-style: italic;
@@ -263,13 +265,14 @@
         {#key mapViewChanged}
             {#each stations as station}
             <!-- {#each filteredStations as station} -->
+                {console.log(getCoords(station))}
+                <circle cx={185.48034538681878} cy={-11.505018167976} r={5}/>
                 <circle 
                     { ...getCoords(station) } r={ radiusScale(station.totalTraffic) } fill="steelblue"
                     style="--departure-ratio: { stationFlow(station.departures / station.totalTraffic) }"
                 >
                     <title class="tooltip">{station.totalTraffic} trips ({station.arrivals} arrivals, {station.departures} departures)</title>
                 </circle>
-                <!-- {console.log("inside for loop: ", station)} -->
             {/each}
         {/key}
     </svg>
@@ -279,3 +282,9 @@
     <div class="balance" style="--departure-ratio: {0.5}">Balanced</div>
     <div class="arrive" style="--departure-ratio: {0}">More Arrivals</div>
 </div>
+
+<section>
+    This will be the text for the map visualization.
+    <hr>
+    {info}
+</section>

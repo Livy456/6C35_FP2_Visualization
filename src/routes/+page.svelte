@@ -5,6 +5,7 @@
     import MapVisual from "./MapVisual.svelte";
     import DotAnimation from "./DotAnimation.svelte";
 
+    let geo_data = [];
     let data = [];
     let temp_data = [];
     let width = 800, height = 275; // changed the height of the graph from 600 to 450
@@ -240,22 +241,22 @@
 
     <div class="eviction_animation">
         {#if metric_to_graph.includes("Family")}
-            <DotAnimation data={temp_data} text={"Hello"}
+            <DotAnimation data={temp_data} text={"[insert text for Family Bin here]"}
             bins={family_bins} metric={metric_to_graph} />
         {/if}
 
         {#if metric_to_graph.includes("Race")}
-            <DotAnimation data={temp_data} text={"Hello"}
+            <DotAnimation data={temp_data} text={"[insert text for Race Bin here]"}
             bins={race_bins} metric={metric_to_graph} />
         {/if}
 
         {#if metric_to_graph.includes("Elder")}
-            <DotAnimation data={temp_data} text={"Hello"}
+            <DotAnimation data={temp_data} text={"[insert text for Elder Bin here]"}
             bins={elder_bins} metric={metric_to_graph} />
         {/if}
 
         {#if metric_to_graph.includes("Corporate")}
-            <DotAnimation data={temp_data} text={"Hello"}
+            <DotAnimation data={temp_data} text={"[insert text for Corporate Bin here]"}
             bins={corp_bins} metric={metric_to_graph} />
         {/if}
         
@@ -263,18 +264,22 @@
 
     <div class="map_visualization">
         
-        <MapVisual/>
-        <section>
-            This will be the text for the map visualization.
-            <hr>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris porttitor velit ac 
-            nisi lacinia, sed aliquet nunc convallis. Vivamus dignissim neque enim, sit amet 
-            venenatis urna sagittis non. Pellentesque habitant morbi tristique senectus et netus 
-            et malesuada fames ac turpis egestas. Fusce congue leo ac felis volutpat cursus. 
-            Phasellus ut ultrices nibh, vel hendrerit tortor. In eu luctus lectus. Vestibulum 
-            ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla 
-            rhoncus id ante ac cursus. Proin ultrices nisi vehicula ante commodo, sed sollicitudin 
-            nibh feugiat. Vivamus tincidunt tortor id neque dictum, pellentesque egestas dolor varius.
-        </section>
+        {#if metric_to_graph.includes("Family")}
+            <MapVisual data={geo_data} info={"[insert text for Family Bin here]"}/>
+        {/if}
+
+        {#if metric_to_graph.includes("Race")}
+            <MapVisual data={geo_data} info={"[insert text for Race Bin here]"}/>
+        {/if}
+
+        {#if metric_to_graph.includes("Elder")}
+            <MapVisual data={geo_data} info={"[insert text for Elder Bin here]"}/>
+        {/if}
+
+        {#if metric_to_graph.includes("Corporate")}
+            <MapVisual data={geo_data} info={"[insert text for Corporate Bin here]"}/>
+        {/if}
+        
+        
     </div>
 </div>
