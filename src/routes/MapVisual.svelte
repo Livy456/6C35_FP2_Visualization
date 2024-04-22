@@ -242,7 +242,7 @@
 </style>
 
 <header>
-    <h1> 🚴🏼‍♀️ Bike Watching</h1>
+    <!-- <h1> 🚴🏼‍♀️ Bike Watching</h1> -->
     <!-- <div class="slider">
         <label>
             <strong> Filter by time: </strong> 
@@ -262,11 +262,15 @@
 
 <div id='map'>
     <svg>
+        <!-- BUG: -->
+        <!-- CIRCLES ARE NOT POPULATING THE MAPBOX ELEMENT -->
+        <!-- getCoords() IS WORKING BUT THE CIRCLES ARE NOT BEING PLOTTED -->
+
         {#key mapViewChanged}
             {#each stations as station}
             <!-- {#each filteredStations as station} -->
-                {console.log(getCoords(station))}
-                <circle cx={185.48034538681878} cy={-11.505018167976} r={5}/>
+                <!-- {console.log(getCoords(station))} -->
+                <!-- <circle cx={185.48034538681878} cy={-11.505018167976} r={5}/> -->
                 <circle 
                     { ...getCoords(station) } r={ radiusScale(station.totalTraffic) } fill="steelblue"
                     style="--departure-ratio: { stationFlow(station.departures / station.totalTraffic) }"
@@ -277,11 +281,11 @@
         {/key}
     </svg>
 </div>
-<div class="legend">
+<!-- <div class="legend">
     <div class="depart" style="--departure-ratio: {1}">More Departures</div>
     <div class="balance" style="--departure-ratio: {0.5}">Balanced</div>
     <div class="arrive" style="--departure-ratio: {0}">More Arrivals</div>
-</div>
+</div> -->
 
 <section>
     This will be the text for the map visualization.

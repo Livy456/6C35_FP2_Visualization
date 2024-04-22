@@ -31,8 +31,9 @@
     padding:50px;
     margin-bottom:20px;
     border-bottom:1px solid black;
-    box-shadow: 5px 5px 5px lightblue;
+    box-shadow: 5px 5px 5px grey;
     opacity:75%;
+    border-radius:5px;
     margin-right:20px;
     margin-left:30px;
     

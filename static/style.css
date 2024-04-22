@@ -23,6 +23,10 @@ h2.meta{
 .selection_column{
     grid-row: 2 / -1;
     grid-column: 1;
+    border: 1px solid black;
+    border-radius: 5px;
+    box-shadow: 5px 5px 5px grey;
+    margin: 5px;
 }
 
 .metric_selection{
@@ -30,16 +34,20 @@ h2.meta{
     margin-right: 5px;
     display: grid;
     text-align: center;
-    padding-right: 5px;
-    padding-top: 0px;
-    border-color: black;
-    border-style: solid;
-    border-radius: 2px;
+    /* padding-right: 5px;
+    padding-top: 5px; */
+    /* font-size: 20px; */
+    /* border: 1px solid black; */
+    /* border-radius: 5px; */
     margin-right: 10px;
     padding: 10px;
-    border-radius: 5px;
-    box-shadow: 5px 5px 5px rgb(147, 121, 121);
     opacity: 80%;
+    
+    :hover{
+        transition-duration: 2500ms;
+        padding:10px;
+        /* box-shadow: 5px 5px 5px rgb(147, 121, 121); */
+    }
 }
 
 .meta{
@@ -52,11 +60,14 @@ h2.meta{
     grid-template-rows: 5fr 5fr;
     padding-top: 0px;
     padding-right:10px;
-}
+    /* font-size: 25px; */
+    
+    input{
+        column-gap: 10px;
+        row-gap: 0px;
+        /* row-gap: 10px; */
+    }
 
-input{
-    column-gap: 10px;
-    row-gap: 10px;
 }
 
 .family_selection{
@@ -102,6 +113,12 @@ svg :global(.selection){
 
 svg{
     margin:5 0px;
+    padding: 10px;
+    border: none;
+}
+
+svg:hover{
+    box-shadow: 5px 5px 5px grey;
 }
 
 dl.info
@@ -169,6 +186,7 @@ div.full_page{
     display: grid;
     grid-template-columns: 25fr 190fr 10fr 100fr;
     grid-template-rows: 10fr auto auto auto;
+    background-image: linear-gradient(white, rgb(0, 217, 255));
 }
 
 .narrative1{
@@ -183,7 +201,7 @@ div.full_page{
 }
 
 .simulate_winter_ban{
-    border: 1px solid black;
+    /* border: 1px solid black; */
     grid-column: 4;
     grid-row: 2;
     padding: 25px;
@@ -200,6 +218,11 @@ div.full_page{
         border-radius: 10px;
         padding: 10px;
     }
+
+    input:hover{
+        transition-duration: 1000ms;
+        padding:15px;
+    }
 }
 
 .income_slider{
@@ -207,21 +230,26 @@ div.full_page{
     grid-row: 2;
     height: auto;
     display: grid;
-    grid-template-rows: 10fr 10fr 10fr;
-    border: 1px solid black;
-    border-radius: 5px;
+    grid-template-rows: 10fr     10fr 10fr;
+    /* border: 1px solid black; */
+    border-bottom: 1px solid black;
+    /* border-radius: 5px; */
     margin:5px;
     padding: 10px;
-    box-shadow: 5px 5px 5px rgb(147, 121, 121);
     opacity: 80%;
+    
 
     .slider {
         appearance: none; /* removes browser-specific styling */
         width: 175px; /* width of slider */
         height: 25px; /* height of slider */
-        background: #05821a ; /* orange background */
+        background: #59ba69 ; /* orange background */
         outline: none; /* remove outline */
         border-radius: 50px; /* round corners */
+        
+    }
+    .slider:hover{
+        box-shadow: 5px 5px 5px rgb(147, 121, 121);
     }
     
     .slider::-webkit-slider-thumb {
@@ -229,7 +257,7 @@ div.full_page{
       width: 20px; /* handle width */
       height: 20px; /* handle height */
       border-radius: 50%; /* make it circular */
-      background: black; /* white color */
+      background: rgb(71, 71, 71); /* white color */
       cursor: pointer; /* cursor on hover */
     } 
 
@@ -244,9 +272,10 @@ div.full_page{
     grid-column: 4;
     grid-row: 3;
     height: fit-content;
-    /* background-color: black; */
+    padding-right:10px;
+
     section{
-        border: 2px solid black;
+        border: 1px solid black;
         border-radius: 3px;
         box-shadow: 5px 5px 5px grey;
         padding:10px;
@@ -260,12 +289,9 @@ div.full_page{
 
 div.full_graph{
     display: subgrid;
-    border: rgb(122, 115, 115);
-    border-style: solid;
-    border-radius: 5px;
-    /* padding-left: 2fr; */
+    padding-left: 2fr;
+    /* border: 1px solid black; */
     margin:5px;
-    padding-left:10px;
 
     .boxplot{
         grid-column: 2 / 3;

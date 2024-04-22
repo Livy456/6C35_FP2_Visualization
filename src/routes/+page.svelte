@@ -204,7 +204,6 @@
         </div>
     </div>
     
-
     <div class="full_graph">
         {#if metric_to_graph.includes("Family")}
             <BinGraph binned_data={box_plot_stats_household_array} yScale={yScale}
@@ -280,6 +279,8 @@
             <MapVisual data={geo_data} info={"[insert text for Corporate Bin here]"}/>
         {/if}
         
-        
     </div>
 </div>
+
+<!-- IDEAS: -->
+<!-- - CHANGE THE GRADIENT TO BE WARM VS COOL COLORS TO REPRESENT THE SIMULATION OF WINTER BAN -->
