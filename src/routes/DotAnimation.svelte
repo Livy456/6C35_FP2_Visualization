@@ -10,6 +10,8 @@
     export let bins = [];
     export let metric = "";
 
+    let temp_bins = ["Really warm", "Warm", "Cold", "Really Cold"];
+
 </script>
 <style>
 .description{
@@ -18,21 +20,31 @@
     padding:10px;
     box-shadow:5px 5px 5px grey;
     margin-right:10px;
+    row-gap:1fr;
 
 }
 
-.legend{
+.bin_legend{
 
     display: grid;
     grid-template-rows: 10fr 10fr;
     padding:50px;
+    margin-bottom:20px;
+    border-bottom:1px solid black;
+    box-shadow: 5px 5px 5px lightblue;
+    opacity:75%;
+    margin-right:20px;
+    margin-left:30px;
     
     label{
         grid-row:1;
+        padding:10px;
     }
     div{
         grid-row:2;
-        border-radius:50px;
+        padding:5px;
+        margin-left:15px;
+        border-radius:40px;
         background-color:red;
         border:4px solid black;
         width:10px;
@@ -40,25 +52,70 @@
     }
 }
 
+.entire_visualization{
+    display:grid;
+    grid-template-columns: 10fr 10fr;
+    margin-bottom:20px;
+
+    .visual{
+        width:400px;
+        height:300px;
+        background-color:blue;
+        opacity:20%;
+        grid-column:1;
+        margin:10px;
+        /* padding:5px; */
+    }
+
+    .temp_legend{
+    display:grid;
+    grid-template-rows: auto auto auto auto;
+        div{
+            grid-row:1;
+            border-radius:50px;
+            background-color:red;
+            border:4px solid black;
+            width:10px;
+            height:10px;
+            subgrid-row:1;
+        }  
+        .percent_labels{
+            grid-row: span 3;
+        }
+    }
+}
+
 </style>
 <dl class="animation_container">
-    <section class="legend">
+    <section class="bin_legend">
         {#each bins as bin}
             <label>{bin}</label>
             <div></div>
         {/each}
     </section>
+
+    <div class="entire_visualization">
+        <section class="visual">
+            <svg> 
+        </section>
+        <section class="temp_legend">
+            {#each bins as bin, i}
+                <!-- <dt>{bin}</dt> -->
+                <div class="bin_circles"/>
+    
+                {#each temp_bins as bin, index}
+                    <!-- <dd class="percent_labels">(bin, temp): ({index}, {i})%</dd> -->
+                    <dd class="percent_labels">%</dd>
+                {/each}
+            {/each}
+        </section>
+        
+    </div>
+
     
     <section class="description">
-        <p>In pulvinar ante enim, id gravida velit vulputate ut. Ut in dui vitae ex 
-            consequat tempor id eu turpis. Fusce in orci dignissim, lacinia metus vel, 
-            euismod neque. Nunc sem diam, placerat at diam in, fringilla auctor odio. 
-            Phasellus dolor justo, condimentum at libero sodales, fringilla accumsan leo. 
-            Nunc venenatis justo eget congue lacinia. Nunc aliquam, lacus vel pretium dictum, 
-            turpis eros pulvinar sem, et placerat leo magna aliquam purus. Mauris sit amet 
-            massa faucibus, suscipit mauris id, congue augue. Fusce vehicula vitae felis 
-            at volutpat. Fusce aliquam lectus lorem, sed porta erat fermentum id. Praesent 
-            a ante nisl. Suspendisse ac nulla eu lectus tincidunt feugiat.
+        <p>
+            {text}
         </p>
     </section>
 </dl>

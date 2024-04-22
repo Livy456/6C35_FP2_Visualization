@@ -30,7 +30,7 @@ h2.meta{
     margin-right: 5px;
     display: grid;
     text-align: center;
-    padding-right: 0px;
+    padding-right: 5px;
     padding-top: 0px;
     border-color: black;
     border-style: solid;
@@ -169,8 +169,8 @@ dl.info
 
 div.full_page{
     display: grid;
-    grid-template-columns: 25fr 180fr 10fr 110fr;
-    grid-template-rows: 10fr auto auto;
+    grid-template-columns: 25fr 190fr 10fr 100fr;
+    grid-template-rows: 10fr auto auto auto;
 }
 
 .narrative1{
@@ -263,10 +263,10 @@ div.full_graph{
     display: subgrid;
     border: rgb(122, 115, 115);
     border-style: solid;
-    border-radius: 2px;
-    padding-left: 2fr;
+    border-radius: 5px;
+    /* padding-left: 2fr; */
     margin:5px;
-    padding:10px;
+    padding-left:10px;
 
     .boxplot{
         grid-column: 2 / 3;
