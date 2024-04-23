@@ -261,7 +261,7 @@
         
     </div>
 
-    <div class="map_visualization">
+    <!-- <div class="map_visualization">
         
         {#if metric_to_graph.includes("Family")}
             <MapVisual data={geo_data} info={"[insert text for Family Bin here]"}/>
@@ -279,7 +279,7 @@
             <MapVisual data={geo_data} info={"[insert text for Corporate Bin here]"}/>
         {/if}
         
-    </div>
+    </div> -->
 </div>
 
 <!-- IDEAS: -->
