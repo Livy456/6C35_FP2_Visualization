@@ -14,7 +14,7 @@
 
     let temp_bins = ["Really warm", "Warm", "Cold", "Really Cold"];
     let margin = {top: 10, right: 10, bottom: 30, left:40};
-    let height= 300;
+    let height= 400;
     let width = 500;
     let startX = 5;
     let startY = height/3 ;
@@ -125,36 +125,28 @@
     function convertMonthToTemp(month)
     {
         // temperature bins: ["Really warm", "Warm", "Cold", "Really Cold"]
-        // console.log(month);
         if((9 <= month) && (month < 11))
         {
-            // console.log("Cold");
             return "Cold";
         }
         // really cold temperatures
-        
         if (((1 <= month ) && (month < 4)) || (11 <= month))
         {
-            // console.log("Really Cold");
             return "Really Cold";
         }
 
         // warm temperatures
         if ((4 <= month) && (month < 6 ))
         {
-            // console.log("Warm");
             return "Warm";
         }
 
         // really warm temperatures
         if(6 <= month < 9)
         {
-            // console.log("Really Warm");
             return "Really warm";
         }
     }
-
-    let durations = ["5s", "10s", "20s"];
 
 </script>
 <style>
@@ -162,43 +154,17 @@
 @keyframes moveCircles{
     to{
         /* final x position of cirlce */
-        cx: 425;
+        cx: var(--xposition);
+
+        /* final x position of cirlce */
         cy: var(--yposition);
-        /* cy: 15; */
     }
 }
 .moving_dots{
-    /* calc(500* var(--index))ms; */
     opacity: 75%;
-    animation-name: moveCircles;
-    /* animation-delay: calc(var(--index) * 100ms); */
-    animation-duration: 20s;
-    animation-timing-function:  ease-in-out infinite;
-    /* animation-delay: calc(v ar(--index) * 100ms); */
-    /* :nth-child(10)
-    {
-        animation-delay: var(--index)s;
-    } */
-}
-
-.moving_dots:nth-child(1)
-{
-    animation-delay: 0s;
-}
-
-.moving_dots:nth-child(2)
-{
-    animation-delay: 3s;
-}
-
-.moving_dots:nth-child(3)
-{
-    animation-delay: 10s;
-}
-
-.moving_dots:nth-child(15)
-{
-    animation-delay: 5s;
+    animation: moveCircles 20s  ease-in-out; 
+    /* infinite; */
+    animation-delay: calc(var(--index) * 10ms);
 }
 
 .description{
@@ -270,11 +236,10 @@
         }
     }
 }
-/* 
-svg{
-    background-color: black;
 
-} */
+svg{
+    margin-bottom: 20px;
+}
 
 </style>
 <dl class="animation_container">
@@ -317,6 +282,8 @@ svg{
                         fill={dataColoring(d, metric, index)}
                         stroke="white"
                         style="
+                        --xposition:{425-Math.random() * 20};
+                        --index:{index};
                         --yposition:{ yScale( convertMonthToTemp(d.month) ) + yScale.bandwidth() / 2 + Math.random()*20}"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)} 
