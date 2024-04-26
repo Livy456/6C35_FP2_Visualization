@@ -6,8 +6,10 @@
     import DotAnimation from "./DotAnimation.svelte";
 
     let geo_data = [];
+    let dataRAW  = [];
     let data = [];
     let temp_data = [];
+    let temp_dataRAW = [];
     let width = 800, height = 275; // changed the height of the graph from 600 to 450
     let yScale = d3.scaleLinear();
     let xScaleHousehold = d3.scaleBand();
@@ -28,6 +30,7 @@
     let box_plot_stats_elder_array = [];
     let box_plot_stats_corp_array = [];
     let metric_to_graph = "Family Type";
+    let checkbox_pushed = false;
     let median_household_income = 25;
     let group_temp_data;
     let group_temp_data_1_2023;
@@ -53,13 +56,13 @@
     }
 
     onMount(async() => {
-        data = await d3.csv("binned_data.csv", row=> ({
+        dataRAW  = await d3.csv("binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate)
         }));
 
-        temp_data = await d3.csv("evictions_per_month_with_bins.csv", row=> ({
+        temp_dataRAW = await d3.csv("evictions_per_month_with_bins.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
             eviction_rate: Number(row.eviction_rate),
@@ -72,16 +75,9 @@
 
     });
 
-    $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
-    $: temp_data = temp_data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.majority_race !== '');
-    // $: winter_data = temp_data.filter
-    $: group_temp_data = d3.group(temp_data, d => d.year, v => v.month);
-    $: group_temp_data_2023 = group_temp_data?.get(2023)?.get(1);
-    // $: mean_2023 =  d3.mean(group_temp_data_1_2023, d => d?.eviction_rate);
-    // $: console.log(group_temp_data_2023);
-    // $: console.log(computeMean(group_temp_data_2023));
-    // $: console.log(group_temp_data_1_2023);
-    // $: console.log(group_temp_data);
+    // $: data  = radio_button_pushed ? dataRAW.filter((d) => d.month >= 4).filter((d) => d.month < 11).filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1) : dataRAW.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > minVal ).filter((d) => d.mhi < maxVal);
+    $: data = dataRAW.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > minVal ).filter((d) => d.mhi < maxVal);
+    $: temp_data = checkbox_pushed ? temp_dataRAW.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.majority_race !== '').filter((d) => d.month >= 4).filter((d) => d.month < 11) : temp_dataRAW.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.majority_race !== '').filter((d) => d.mhi > minVal).filter((d) => d.mhi < maxVal);
     $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
@@ -104,32 +100,12 @@
 
     // Computing box plots for corporate ownership binned data
     $: box_plot_stats_corp_array = computeStats(corp_bins, "corporate", data);
-    
-
-    // function computeMean(data)
-    // {
-    //     if(data)
-    //     {
-            
-    //         console.log("Inside computeMean function", d3.mean(data, d => d.eviction));
-    //     }
-    //     return "Hello";
-    // }
 
     // compute boxplots for each category for a bin (family, race, elder, corporate ownership)
     function computeStats(bins, metric, data)
     {
         let summary_stats = [];
         let data_filtered;
-
-        // let family_data = d3.group(d.family_bins);
-
-        // for (let bin of bins)
-        // {
-        //     eviction_rates = Array.from(family_data.get(bin), ([key, value]));
-        // }
-        // family_data = d3.group(d.family_bins);
-        // for 
 
         for(let bin of bins)
         {
@@ -185,8 +161,246 @@
 
         return summary_stats
     } 
+    function checkedBox(evt)
+    {
+        console.log(evt);
+        if(checkbox_pushed === true)
+        {
+            checkbox_pushed = false;
+        }
+
+        if(checkbox_pushed === false)
+        {
+            checkbox_pushed = true;
+        }
+    }
+
+    ////////////////// JS for the income slider //////////////////
+
+    let minVal = 10000;
+    let maxVal = 200000;
+    const minGap = 30000;
+    const sliderMinValue = 10000;
+    const sliderMaxValue = 200000;
+    const stepValue = 1000;
+
+    // Reactive styling for slider track
+    $: minPercent = ((minVal - sliderMinValue) / (sliderMaxValue - sliderMinValue)) * 100;
+    $: maxPercent = ((maxVal - sliderMinValue) / (sliderMaxValue - sliderMinValue)) * 100;
+
+    // Enforce the minimum gap dynamically, broken
+    $: {
+        if (maxVal - minVal < minGap) {
+            // If decreasing maxVal or increasing minVal, adjust the other to maintain the gap
+            if (maxVal - minVal < minGap) {
+                maxVal = minVal + minGap;
+            }
+
+            if (minVal < sliderMinValue) {
+                minVal = sliderMinValue;
+                maxVal = minVal + minGap;
+            }
+            if (maxVal > sliderMaxValue) {
+                maxVal = sliderMaxValue;
+                minVal = maxVal - minGap;
+            }
+        }
+    }
+
+    // How to handle typed inputs
+    function handleMinInput(event) {
+        const inputVal = Math.max(Number(parseMoney(event.target.value)), sliderMinValue);
+        minVal = Math.min(inputVal, maxVal - minGap);
+    }
+
+    // How to handle typed inputs
+    function handleMaxInput(event) {
+        const inputVal = Math.min(Number(parseMoney(event.target.value)), sliderMaxValue);
+        maxVal = Math.max(inputVal, minVal + minGap);
+    }
+
+    // Checks with user has hit enter to change slider
+    function checkEnterKey(event, handler) {
+        if (event.key === 'Enter') {
+        handler(event);
+        event.target.blur(); // Optionally blur the input after processing to mimic the blur behavior
+        }
+    }
+
+    // Function to format numbers as money
+    function formatIncome(value) {
+        return value.toLocaleString('en-US');
+    }
+
+    // Function to parse formatted money back to number
+    function parseMoney(value) {
+        return parseInt(value.replace(/[\$,]/g, ''), 10);
+    }
+
+    //////////////////////////////////////////////////////////////
 
 </script>
+
+<style>
+     /* CSS for Income Selector */
+
+     .double-slider-box {
+        
+        margin: 0;
+        box-sizing: border-box;
+
+        display: grid;
+        max-width: 30em;
+        background-color: rgb(207, 207, 207);
+        padding: 20px 40px;
+        border-radius: 1em;
+        font-family: 'Helvetica Neue';
+    
+    }
+
+    h3.range-title{
+
+        text-align: center;
+
+    }
+
+    p.range-description {
+
+        text-align: center;
+        margin-bottom: 1em;
+        margin-top: -0.5em;
+
+    }
+
+    .range-slider {
+
+        position: relative;
+        width: 100%;
+        height: 5px;
+        margin: 30px 0;
+        background-color: rgb(114, 114, 114);
+
+    }
+
+    .slider-track {
+
+        height: 100%;
+        position: absolute;
+        background-color: firebrick;
+
+    }
+
+    .range-slider input {
+
+        position: absolute;
+        width: 100%;
+        background: none;
+        pointer-events: none;
+        top: 50%;
+        transform: translateY(-60%);
+        appearance: none;
+
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        border: 3px solid #FFFFFF;
+        background: #FFFFFF;
+        pointer-events: auto;
+        appearance: none;
+        cursor: pointer;
+        box-shadow: 0 0.125em 0.5625em rgba(0, 0, 0, 0.25)
+
+    }
+
+    /* this is the same thing, but for the Firefox (uncessary?) */
+    input[type="range"]::-moz-slider-thumb {
+
+        height: 25px;
+        width: 25px;
+        border-radius: 50%;
+        border: 3px solid #FFFFFF;
+        background: #FFFFFF;
+        pointer-events: auto;
+        cursor: pointer;
+        -moz-appearance: none;
+        box-shadow: 0 0.125rem 0.5625rem rgba(0, 0, 0, 0.25)
+
+    }
+
+    .input-box {
+
+        display: flex;
+
+    }
+
+    .min-box, 
+    .max-box {
+
+        width: 50%;
+
+    }
+
+    .min-box {
+
+        padding-right: 0.5em;
+        margin-right: 0.5em;
+
+    }
+
+    .input-wrap {
+
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        width: 100%;
+        
+    }
+
+    .input-addon {
+
+        display: flex;
+        align-items: center;
+        padding: 0.625em 1em;
+        font-size: 1em;
+        font-weight: 400;
+        line-height: 1.5;
+        color: rgb(0, 0, 0);
+        text-align: center;
+        white-space: nowrap;
+        background-color: rgb(181, 181, 181);
+        border: 1px solid rgb(0, 0, 0);
+        border-radius: 0.5em;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+
+    }
+
+    .input_field-min-input, 
+    .input_field-max-input{
+
+        margin-left: -1px;
+        padding: 0.425em;
+        font-size: 1em;
+        border-radius: 0.5em;
+        position: relative;
+        flex: 1 1 auto;
+        width: 1%;
+        min-width: 0;
+        color: rgb(0, 0, 0);
+        background-color: white;
+        background-clip: padding-box;
+        border: 1px solid black;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    /* CSS for Income Selector */
+</style>
 
 <h3 class="meta">
     <strong style="color: blue;">Interactive Voices:</strong>
@@ -209,13 +423,36 @@
             </p>
         </section>
     </div>
+
     <div class="selection_column">
-        <div class="income_slider">
-            <h2>Income</h2>
-            <!-- <input type="range" min="0" max="100" value="25" class="slider">
-            <input type="range" min="0" max="100" value="75" class="slider"> -->
-            <input class="slider" type="range" min=2 max="40" bind:value={median_household_income}>
-            <label class="slider_label">${median_household_income}0,000</label>
+        <div class="double-slider-box">
+            <h3 class="range-title">Yearly Income</h3>
+            <p class="range-description">Use the slider tool to select a minimum and maximum income</p>
+            <div class="range-slider">
+                <span class="slider-track" style="left: {minPercent + 1}%; right: {100 - maxPercent}%"></span>
+                <input type="range" bind:value={minVal} class="min-val" min={sliderMinValue} max={sliderMaxValue} step={stepValue}>
+                <input type="range" bind:value={maxVal} class="max-val" min={sliderMinValue} max={sliderMaxValue} step={stepValue}>
+            </div>
+            <div class="input-box">
+                <div class="min-box">
+                    <div class="input-wrap">
+                        <span class="input-addon">$</span>
+                        <input type="text" class="input_field-min-input"
+                               value={formatIncome(minVal)} 
+                               on:blur={handleMinInput}
+                               on:keydown={(event) => checkEnterKey(event, handleMinInput)}>
+                    </div>
+                </div>
+                <div class="max-box">
+                    <div class="input-wrap">
+                        <span class="input-addon">$</span>
+                        <input type="text" class="input_field-max-input"
+                               value={formatIncome(maxVal)} 
+                               on:blur={handleMaxInput}
+                               on:keydown={(event) => checkEnterKey(event, handleMaxInput)}>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="metric_selection">
@@ -253,27 +490,31 @@
         {#if metric_to_graph.includes("Family")}
             <BinGraph binned_data={box_plot_stats_household_array} yScale={yScale}
                       xScale={xScaleHousehold} metric={metric_to_graph} 
-                      bin_type={family_bins} data={data} binned_info={"Family Metric"}/>
+                      bin_type={family_bins} data={data} text={["Family 1", "Family 2", "Family 3"]}/>
         {/if}
         {#if metric_to_graph.includes("Race")}
             <BinGraph binned_data={box_plot_stats_race_array} yScale={yScale}
                       xScale={xScaleRace} metric={metric_to_graph}
-                      bin_type={race_bins} data={data} binned_info={"Race Metric"}/>
+                      bin_type={race_bins} data={data} text={["Race 1", "Race 2", "Race 3", "Race 4"]}/>
         {/if}
         {#if metric_to_graph.includes("Elderly")}
             <BinGraph binned_data={box_plot_stats_elder_array} yScale={yScale}
                       xScale={xScaleElder} metric={metric_to_graph}
-                      bin_type={elder_bins} data={data} binned_info={"Elderly Metric"}/>
+                      bin_type={elder_bins} data={data} text={["Family 1", "Family 2"]}/>
         {/if}
         {#if metric_to_graph.includes("Corporate")}
             <BinGraph binned_data={box_plot_stats_corp_array} yScale={yScale}
                       xScale={xScaleCorp} metric={metric_to_graph}
-                      bin_type={corp_bins} data={data} binned_info={"Corporate Metric"}/>
+                      bin_type={corp_bins} data={data} text={["Family 1", "Family 2", "Family 3"]}/>
         {/if}        
     </div>
 
-    <div class="simulate_winter_ban">
-        <input class="winter_button" type="button" value="Simulate Winter Ban">
+    <!-- <div class="simulate_winter_ban">
+        <input class="winter_button" type="checkbox" 
+        on:click={evt => checkedBox(evt)}
+        name="is_clicked"
+        value={true} bind:this={checkbox_pushed}>
+        <label>Simulate Winter Ban</label>
         <section>
             <p>
                 Click on the <em>"Simulate Winter Ban"</em> button to see how the eviction rate changes 
@@ -281,7 +522,7 @@
                 which demographics are most impacted by winter bans.
             </p>
         </section>
-    </div>
+    </div> -->
 
     <div class="eviction_animation">
         {#if metric_to_graph.includes("Family")}
@@ -303,26 +544,6 @@
             <DotAnimation data={temp_data} text={"[insert text for Corporate Bin here]"}
             bins={corp_bins} metric={metric_to_graph} />
         {/if}
-        
+         
     </div>
-
-    <!-- <div class="map_visualization">
-        
-        {#if metric_to_graph.includes("Family")}
-            <MapVisual data={geo_data} info={"[insert text for Family Bin here]"}/>
-        {/if}
-
-        {#if metric_to_graph.includes("Race")}
-            <MapVisual data={geo_data} info={"[insert text for Race Bin here]"}/>
-        {/if}
-
-        {#if metric_to_graph.includes("Elder")}
-            <MapVisual data={geo_data} info={"[insert text for Elder Bin here]"}/>
-        {/if}
-
-        {#if metric_to_graph.includes("Corporate")}
-            <MapVisual data={geo_data} info={"[insert text for Corporate Bin here]"}/>
-        {/if}
-        
-    </div> -->
 </div>

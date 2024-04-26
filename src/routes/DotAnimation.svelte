@@ -162,8 +162,8 @@
 }
 .moving_dots{
     opacity: 75%;
-    animation: moveCircles 20s  ease-in-out; 
-    /* infinite; */
+    /* animation: moveCircles 20s  ease-in-out; */
+    animation: moveCircles 20s  ease-in-out infinite; 
     animation-delay: calc(var(--index) * 10ms);
 }
 
@@ -250,7 +250,7 @@ svg{
         {/each}
     </section>
 
-    <dl id="eviction-tooltip" class="info tooltip" 
+    <!-- <dl id="eviction-tooltip" class="info tooltip" 
         hidden={hoveredIndex === -1}
         bind:this={evictionTooltip}
         style="top:{tooltipPosition.y}px; left:{tooltipPosition.x}px">
@@ -263,7 +263,7 @@ svg{
         <dt>Eviction Year</dt>
         <dd> { hoveredEviction.year } </dd>
        
-    </dl>
+    </dl> -->
 
     <div class="entire_visualization">
         <section class="visual">

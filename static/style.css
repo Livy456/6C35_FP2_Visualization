@@ -216,7 +216,7 @@ dl.info
 
 div.full_page{
     display: grid;
-    grid-template-columns: 25fr 190fr 10fr 100fr;
+    grid-template-columns: 50fr 190fr 10fr 100fr;
     grid-template-rows: 10fr auto auto auto;
     background-image: linear-gradient(white, rgb(0, 217, 255));
 }

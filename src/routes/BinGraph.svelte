@@ -9,7 +9,7 @@
     export let xScale = d3.scaleBand();
     export let metric = "Family Type";
     export let data = [];
-    export let binned_info = "";
+    export let text = [];
     export let bin_type = [];
     export let yScale = d3.scaleLinear();
 
@@ -296,7 +296,7 @@ p{
     </svg>
 
     <dl class="metric_info">
-        {#each binned_info as info}
+        {#each text as info}
             {#if metric.includes("Black")}
                 <p>{info}</p>
             {/if}
