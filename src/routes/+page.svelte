@@ -28,7 +28,13 @@
     let box_plot_stats_elder_array = [];
     let box_plot_stats_corp_array = [];
     let metric_to_graph = "Family Type";
-    let income = 25;
+    let median_household_income = 25;
+    let group_temp_data;
+    let group_temp_data_1_2023;
+    let winter_data = [];
+    let spring_data = [];
+    let summer_data = [];
+    let fall_data = [];
         
     // defining axes
     let margin = {top: 10, right: 10, bottom: 30, left:40};
@@ -50,13 +56,32 @@
         data = await d3.csv("binned_data.csv", row=> ({
             ...row,
             mhi: Number(row.mhi),
-            eviction_rate: Number(row.eviction_rate),
-            family_bins: String(row.family_bins)
+            eviction_rate: Number(row.eviction_rate)
         }));
+
+        temp_data = await d3.csv("evictions_per_month_with_bins.csv", row=> ({
+            ...row,
+            mhi: Number(row.mhi),
+            eviction_rate: Number(row.eviction_rate),
+            year: Number(row.year),
+            month: Number(row.month),
+            filings: Number(row.filings)
+        }));
+
+        // temp_data
 
     });
 
     $: data = data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.mhi > 0);
+    $: temp_data = temp_data.filter((d) => d.family_bins !== '').filter((d) => d.eviction_rate < 1).filter((d) => d.majority_race !== '');
+    // $: winter_data = temp_data.filter
+    $: group_temp_data = d3.group(temp_data, d => d.year, v => v.month);
+    $: group_temp_data_2023 = group_temp_data?.get(2023)?.get(1);
+    // $: mean_2023 =  d3.mean(group_temp_data_1_2023, d => d?.eviction_rate);
+    // $: console.log(group_temp_data_2023);
+    // $: console.log(computeMean(group_temp_data_2023));
+    // $: console.log(group_temp_data_1_2023);
+    // $: console.log(group_temp_data);
     $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
@@ -80,11 +105,31 @@
     // Computing box plots for corporate ownership binned data
     $: box_plot_stats_corp_array = computeStats(corp_bins, "corporate", data);
     
+
+    // function computeMean(data)
+    // {
+    //     if(data)
+    //     {
+            
+    //         console.log("Inside computeMean function", d3.mean(data, d => d.eviction));
+    //     }
+    //     return "Hello";
+    // }
+
     // compute boxplots for each category for a bin (family, race, elder, corporate ownership)
     function computeStats(bins, metric, data)
     {
         let summary_stats = [];
         let data_filtered;
+
+        // let family_data = d3.group(d.family_bins);
+
+        // for (let bin of bins)
+        // {
+        //     eviction_rates = Array.from(family_data.get(bin), ([key, value]));
+        // }
+        // family_data = d3.group(d.family_bins);
+        // for 
 
         for(let bin of bins)
         {
@@ -169,8 +214,8 @@
             <h2>Income</h2>
             <!-- <input type="range" min="0" max="100" value="25" class="slider">
             <input type="range" min="0" max="100" value="75" class="slider"> -->
-            <input class="slider" type="range" min=2 max="40" bind:value={income}>
-            <label class="slider_label">${income}0,000</label>
+            <input class="slider" type="range" min=2 max="40" bind:value={median_household_income}>
+            <label class="slider_label">${median_household_income}0,000</label>
         </div>
         
         <div class="metric_selection">
@@ -281,8 +326,3 @@
         
     </div> -->
 </div>
-
-<!-- IDEAS: -->
-<!-- - CHANGE THE GRADIENT TO BE WARM VS COOL COLORS TO REPRESENT THE SIMULATION OF WINTER BAN -->
-<!-- BUG: -->
-<!-- WHEN HOVERING OVER BUTTONS FOR VARIOUS BINS, GLITCHES WHEN ANOTHER BUTTON IS HOVERED OVER -->
