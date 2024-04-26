@@ -317,7 +317,6 @@ svg{
                         fill={dataColoring(d, metric, index)}
                         stroke="white"
                         style="
-                        --animation-duration: { durations[index% durations.length] };
                         --yposition:{ yScale( convertMonthToTemp(d.month) ) + yScale.bandwidth() / 2 + Math.random()*20}"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)} 
