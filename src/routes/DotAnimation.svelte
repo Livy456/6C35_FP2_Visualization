@@ -5,8 +5,6 @@
         autoPlacement,
         offset
     } from '@floating-ui/dom';
-    import { onMount } from "svelte";
-    // import { spring } from "svelte/motion";
     export let text = "";
     export let data = [];
     export let bins = [];
@@ -17,60 +15,28 @@
     let height= 400;
     let width = 500;
     let startX = 5;
-    let startY = height/3 ;
-    let endX = width;
-    let endY = Math.random()*height;
+    let startY = height/4 ;
     let hoveredIndex = -1;
     $: hoveredEviction = data[hoveredIndex]?? {};
     let tooltipPosition = {x:0, y:0};
     let evictionTooltip;
-    let xAxis, yAxis;
+    let yAxis;
     let yAxisGridlines;
-    let transitionDuration = 10000;
     let usableArea = {
         top: margin.top,
         bottom: height - margin.bottom,
         left: margin.left,
         right: width - margin.right
     };
-    // let yScale = d3.scaleLinear();
     let yScale = d3.scaleBand();
-    let winter_data = [];
-    let spring_data = [];
-    let summer_data = [];
-    let fall_data = [];
-    // let circle;
-    let svg;
-    let circle;
-    let container;
     let fillColor = d3.scaleOrdinal(d3.schemeCategory10);
     const format = d3.format(".1~%");
 
-    // $: data = data.filter( (d) => d.month < 5);
-    // $: console.log(winter_data);
-    // $: console.log(data);
-    // $: yScale = yScale.domain([0, 12]).range([usableArea.bottom, usableArea.top]);
     $: yScale = yScale.domain(temp_bins).range([usableArea.bottom, usableArea.top]);
     $: {
         d3.select(yAxisGridlines).call(d3.axisRight(yScale).tickSize(width-100));
     }
 
-    // $:{
-    //     console.log( d3.select("svg").selectAll("circle") );
-    // }
-
-    // $: onMount ( () => {
-    //     container = d3.select(".visual");
-    //     circles = container.selectAll(".moving_dots");
-
-    // });
-    // $: svg = d3.select(svg);
-    // $: console.log(svg);
-    // $: console.log(circles);
-    // $: console.log(container);
-    
-
-    // $: data = data.slice(0, 11); // gets the first 10 points of data 
     async function dotInteraction (index, evt){
         let hoveredDot = evt.target;
         
@@ -90,11 +56,6 @@
         {
             hoveredIndex = -1;
         }
-    } 
-
-    function computeYposition(month)
-    {
-
     }
 
     function dataColoring(d, bin_type, i)
@@ -163,10 +124,9 @@
 .moving_dots{
     opacity: 75%;
     /* animation: moveCircles 20s  ease-in-out; */
-    animation: moveCircles 20s  ease-in-out infinite; 
+    animation: moveCircles 30s  ease-in-out infinite; 
     animation-delay: calc(var(--index) * 10ms);
 }
-
 .description{
     border: 1px solid black;
     border-radius:3px;
@@ -174,6 +134,7 @@
     box-shadow:5px 5px 5px grey;
     margin-right:10px;
     row-gap:1fr;
+    margin-top:15px;
 }
 
 .bin_legend{
@@ -215,7 +176,8 @@
         /* background-color:blue; */
         opacity:80%;
         grid-column:1;
-        margin:10px;
+        margin-bottom:80px;
+        padding-bottom: 30px;
         /* padding:5px; */
     }
 
@@ -284,7 +246,7 @@ svg{
                         style="
                         --xposition:{425-Math.random() * 20};
                         --index:{index};
-                        --yposition:{ yScale( convertMonthToTemp(d.month) ) + yScale.bandwidth() / 2 + Math.random()*20}"
+                        --yposition:{ yScale( convertMonthToTemp(d.month) ) + yScale.bandwidth() / 2 + Math.random()*40}"
                         on:mouseenter= {evt=> dotInteraction(index, evt)}
                         on:mouseleave={evt => dotInteraction(index, evt)} 
                     />

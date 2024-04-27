@@ -156,12 +156,13 @@ svg:hover{
 dl.info
 {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
     background-color: oklch(100% 0% 0 / 80%);
     box-shadow: 5px 5px 5px lightslategrey;
     border-radius: 5%;
     backdrop-filter: blur(10px);
-    padding:10px;
+    margin:0px;
+    padding:5px;
     /* transition-duration: 50ms; */
     transition-property: opacity, visibility;
 
@@ -216,7 +217,7 @@ dl.info
 
 div.full_page{
     display: grid;
-    grid-template-columns: 50fr 190fr 10fr 100fr;
+    grid-template-columns: 80fr 190fr 10fr 50fr;
     grid-template-rows: 10fr auto auto auto;
     background-image: linear-gradient(white, rgb(0, 217, 255));
 }

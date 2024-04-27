@@ -2,10 +2,13 @@
     import * as d3 from "d3";
     import { onMount } from "svelte";
     import BinGraph from "./BinGraph.svelte";
-    import MapVisual from "./MapVisual.svelte";
     import DotAnimation from "./DotAnimation.svelte";
+    import {
+        computePosition,
+        autoPlacement,
+        offset
+    } from '@floating-ui/dom';
 
-    let geo_data = [];
     let dataRAW  = [];
     let data = [];
     let temp_data = [];
@@ -25,20 +28,22 @@
     let race_bins = ["Black", "White", "Latino", "Other"];
     let elder_bins = ["some elders", "no elders"];
     let corp_bins = ["low", "medium", "high"];
+    let text_description = ["Majority, more than 50%, of the tenants in the house are a particular race.", 
+    "The tenants in the house are either all family members, not related at all, or a mix of family members and non family members.", 
+    "The housing property either contains some elderly people or no elderly people.", 
+    "The housing properties in the area have a majority of low, medium, or high corporate ownership."];
     let box_plot_stats_household_array = [];
     let box_plot_stats_race_array = [];
     let box_plot_stats_elder_array = [];
     let box_plot_stats_corp_array = [];
     let metric_to_graph = "Family Type";
     let checkbox_pushed = false;
-    let median_household_income = 25;
-    let group_temp_data;
-    let group_temp_data_1_2023;
-    let winter_data = [];
-    let spring_data = [];
-    let summer_data = [];
-    let fall_data = [];
-        
+    let hoveredIndex = -1;
+    $: hoveredEviction = text_description[hoveredIndex]?? {};
+    let tooltipPosition = {x:0, y:0};
+    let evictionTooltip;
+    const format = d3.format(".1~%");
+
     // defining axes
     let margin = {top: 10, right: 10, bottom: 30, left:40};
     let usableArea = {
@@ -100,6 +105,27 @@
 
     // Computing box plots for corporate ownership binned data
     $: box_plot_stats_corp_array = computeStats(corp_bins, "corporate", data);
+
+    async function textInteraction (index, evt){
+        let hoveredDot = evt.target;
+        
+        if (evt.type === "mouseenter" || evt.type === "focus")
+        {
+            hoveredIndex = index;
+            tooltipPosition = await computePosition(hoveredDot, evictionTooltip, {
+                strategy: "fixed",
+                middleware: [
+                    offset(1),
+                    autoPlacement()
+                ],
+            });
+        }
+
+        else if (evt.type === "mouseleave" || evt.type === "blur")
+        {
+            hoveredIndex = -1;
+        }
+    } 
 
     // compute boxplots for each category for a bin (family, race, elder, corporate ownership)
     function computeStats(bins, metric, data)
@@ -245,17 +271,14 @@
      /* CSS for Income Selector */
 
      .double-slider-box {
-        
         margin: 0;
         box-sizing: border-box;
-
         display: grid;
         max-width: 30em;
-        background-color: rgb(207, 207, 207);
+        /* background-color: rgb(207, 207, 207); */
         padding: 20px 40px;
         border-radius: 1em;
         font-family: 'Helvetica Neue';
-    
     }
 
     h3.range-title{
@@ -454,34 +477,78 @@
                 </div>
             </div>
         </div>
+
+        <dl id="eviction-tooltip" class="info tooltip" 
+            hidden={hoveredIndex === -1}
+            bind:this={evictionTooltip}
+            style="top:{tooltipPosition.y}px; left:{tooltipPosition.x}px">
+            <dt>Metric Description</dt>
+            <dd> { hoveredEviction } </dd>
+        </dl>
         
         <div class="metric_selection">
-            <h4>Race</h4>
+            <h4 on:mouseenter= {evt=> textInteraction(0, evt)}
+                on:mouseleave={evt => textInteraction(0, evt)}>
+                Race
+            </h4>
             <dl class="race_selection">
-                <input type="button" value="White" on:click={ function() {metric_to_graph= "Race White"} }>
-                <input type="button" value="Black" on:click={ function() {metric_to_graph= "Race Black"} }>
-                <input type="button" value="Latino" on:click={ function() {metric_to_graph= "Race Latino"} }>
-                <input type="button" value="Other" on:click={ function() {metric_to_graph= "Race Other"} }>
+                <input type="button" value="White" 
+                on:click={ function() {metric_to_graph= "Race White"} }>
+                
+                <input type="button" value="Black" 
+                on:click={ function() {metric_to_graph= "Race Black"} }>
+
+                <input type="button" value="Latino" 
+                on:click={ function() {metric_to_graph= "Race Latino"} }>
+
+                <input type="button" value="Other" 
+                on:click={ function() {metric_to_graph= "Race Other"} }>
             </dl>
             
-            <h4>Family Type</h4>
+            <h4
+                on:mouseenter= {evt=> textInteraction(1, evt)}
+                on:mouseleave={evt => textInteraction(1, evt)}>
+                Family Type
+            </h4>
             <dl class="family_selection">
-                <input type="button" value="Mixed" on:click={ function() {metric_to_graph= "Family Type Mixed"} }>
-                <input type="button" value="Non Family" on:click={ function() {metric_to_graph= "Family Type Non-Fam"} }>
-                <input class="bottom_row" type="button" value="Family" on:click={ function() {metric_to_graph= "Family Type FamilyType"} }>
+                <input type="button" value="Mixed" 
+                on:click={ function() {metric_to_graph= "Family Type Mixed"} }>
+
+                <input type="button" value="Non Family" 
+                on:click={ function() {metric_to_graph= "Family Type Non-Fam"} }>
+
+                <input class="bottom_row" type="button" value="Family" 
+                on:click={ function() {metric_to_graph= "Family Type FamilyType"} }>
             </dl>
             
-            <h4>Elderly Population</h4>
+            <h4
+                on:mouseenter= {evt=> textInteraction(2, evt)}
+                on:mouseleave={evt => textInteraction(2, evt)}>
+                Elderly Population
+
+            </h4>
             <dl class="elderly_selection">
-                <input type="button" value="No Elderly" on:click={ function() {metric_to_graph= "No Elderly"} }>
-                <input type="button" value="Some Elderly" on:click={ function() {metric_to_graph= "Some Elderly"} }>
+                <input type="button" value="No Elderly" 
+                on:click={ function() {metric_to_graph= "No Elderly"} }>
+
+                <input type="button" value="Some Elderly" 
+                on:click={ function() {metric_to_graph= "Some Elderly"} }>
             </dl>
             
-            <h4>Corporate Ownership</h4>
+            <h4
+                on:mouseenter= {evt=> textInteraction(3, evt)}
+                on:mouseleave={evt => textInteraction(3, evt)}>
+                Corporate Ownership
+            </h4>
             <dl class="corporate_selection">
-                <input type="button" value="Low Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Low"} }>
-                <input type="button" value="Medium Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership Medium"} }>
-                <input type="button" value="High Corporate Ownership" on:click={ function() {metric_to_graph= "Corporate Ownership High"} }>
+                <input type="button" value="Low Corporate Ownership" 
+                on:click={ function() {metric_to_graph= "Corporate Ownership Low"} }>
+
+                <input type="button" value="Medium Corporate Ownership" 
+                on:click={ function() {metric_to_graph= "Corporate Ownership Medium"} }>
+
+                <input type="button" value="High Corporate Ownership" 
+                on:click={ function() {metric_to_graph= "Corporate Ownership High"} }>
             </dl>
         </div>
     </div>
@@ -490,22 +557,22 @@
         {#if metric_to_graph.includes("Family")}
             <BinGraph binned_data={box_plot_stats_household_array} yScale={yScale}
                       xScale={xScaleHousehold} metric={metric_to_graph} 
-                      bin_type={family_bins} data={data} text={["Family 1", "Family 2", "Family 3"]}/>
+                      bin_type={family_bins} data={data} text={["Family 1"]}/>
         {/if}
         {#if metric_to_graph.includes("Race")}
             <BinGraph binned_data={box_plot_stats_race_array} yScale={yScale}
                       xScale={xScaleRace} metric={metric_to_graph}
-                      bin_type={race_bins} data={data} text={["Race 1", "Race 2", "Race 3", "Race 4"]}/>
+                      bin_type={race_bins} data={data} text={["Race 1"]}/>
         {/if}
         {#if metric_to_graph.includes("Elderly")}
             <BinGraph binned_data={box_plot_stats_elder_array} yScale={yScale}
                       xScale={xScaleElder} metric={metric_to_graph}
-                      bin_type={elder_bins} data={data} text={["Family 1", "Family 2"]}/>
+                      bin_type={elder_bins} data={data} text={["Elderly 1"]}/>
         {/if}
         {#if metric_to_graph.includes("Corporate")}
             <BinGraph binned_data={box_plot_stats_corp_array} yScale={yScale}
                       xScale={xScaleCorp} metric={metric_to_graph}
-                      bin_type={corp_bins} data={data} text={["Family 1", "Family 2", "Family 3"]}/>
+                      bin_type={corp_bins} data={data} text={["Corporate 1"]}/>
         {/if}        
     </div>
 

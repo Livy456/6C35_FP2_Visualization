@@ -53,11 +53,6 @@
     $: selectedEvictions = brushedSelection ? data.filter(isDataSelected) : [];    
     $: hasSelection = brushedSelection && selectedEvictions.length > 0;
     $: selectedLines = (hasSelection ? selectedEviction: data).flatMap(d => d.mhi);
-    
-    // function fill_color(d)
-    // {
-
-    // }
 
     function compute_cx(d)
     {
@@ -272,7 +267,6 @@ p{
             {/if}   
         {/each}
         
-        <!-- MIGHT NEED TO PUT IN THE SPECIFIC BIN TYPE AND USE IF STATEMENTS -->
         {#each data as d, index}           
             <circle 
                 class:selected={isDataSelected(d, metric)}
